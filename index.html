@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="default" data-lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="meta-title">OPMS Enterprise - نظام إنتاجية العمليات</title>
+    <!-- Bootstrap 5 RTL/LTR CSS Dynamic Loader -->
+    <link id="bootstrap-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (XLSX) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root { 
+            --sidebar-width: 260px; 
+            --primary-color: #2563eb;
+            --sidebar-bg: #0f172a;
+            --body-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="default"] { --primary-color: #2563eb; --sidebar-bg: #0f172a; }
+        [data-theme="emerald"] { --primary-color: #059669; --sidebar-bg: #022c22; }
+        [data-theme="violet"] { --primary-color: #7c3aed; --sidebar-bg: #2e1065; }
+        [data-theme="amber"] { --primary-color: #d97706; --sidebar-bg: #451a03; }
+        [data-theme="rose"] { --primary-color: #e11d48; --sidebar-bg: #4c0519; }
+        [data-theme="cyan"] { --primary-color: #0891b2; --sidebar-bg: #083344; }
+        [data-theme="indigo"] { --primary-color: #4f46e5; --sidebar-bg: #1e1b4b; }
+        [data-theme="teal"] { --primary-color: #0d9488; --sidebar-bg: #042f2e; }
+        [data-theme="orange"] { --primary-color: #ea580c; --sidebar-bg: #431407; }
+        
+        [data-theme="dark"] { 
+            --primary-color: #38bdf8; 
+            --sidebar-bg: #020617; 
+            --body-bg: #090d16 !important; 
+            --card-bg: #111827 !important;
+            --text-color: #f8fafc !important;
+            --border-color: #1f2937 !important;
+        }
+
+        [data-theme="dark"] body { background-color: var(--body-bg) !important; color: var(--text-color) !important; }
+        [data-theme="dark"] .card, 
+        [data-theme="dark"] .navbar, 
+        [data-theme="dark"] .modal-content, 
+        [data-theme="dark"] .dropdown-menu { 
+            background-color: var(--card-bg) !important; 
+            color: var(--text-color) !important; 
+            border-color: var(--border-color) !important; 
+        }
+        [data-theme="dark"] .table { color: var(--text-color) !important; border-color: var(--border-color) !important; }
+        [data-theme="dark"] .table th, 
+        [data-theme="dark"] .table td { 
+            color: var(--text-color) !important; 
+            border-color: var(--border-color) !important; 
+            background-color: transparent !important;
+        }
+        [data-theme="dark"] .table-light,
+        [data-theme="dark"] .table-light th {
+            background-color: #1f2937 !important;
+            color: #93c5fd !important;
+        }
+        [data-theme="dark"] .form-control, 
+        [data-theme="dark"] .form-select { 
+            background-color: #1f2937 !important; 
+            border-color: #374151 !important; 
+            color: #f8fafc !important; 
+        }
+        [data-theme="dark"] .form-control:focus, 
+        [data-theme="dark"] .form-select:focus {
+            background-color: #1f2937 !important;
+            color: #fff !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+        }
+        [data-theme="dark"] .bg-light { background-color: #111827 !important; color: #f8fafc !important; }
+        [data-theme="dark"] .text-muted { color: #94a3b8 !important; }
+        [data-theme="dark"] .dropdown-item { color: #e2e8f0; }
+        [data-theme="dark"] .dropdown-item:hover { background-color: #1f2937; color: #38bdf8; }
+        [data-theme="dark"] .input-group-text { background-color: #1f2937; border-color: #374151; color: #cbd5e1; }
+
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background-color: var(--body-bg); color: var(--text-color); overflow-x: hidden; }
+        #sidebar { width: var(--sidebar-width); min-height: 100vh; transition: all 0.3s; z-index: 1000; background-color: var(--sidebar-bg); }
+        #sidebar .nav-link { color: #94a3b8; border-radius: 8px; padding: 10px 15px; margin-bottom: 6px; transition: all 0.2s; font-weight: 500; }
+        #sidebar .nav-link:hover, #sidebar .nav-link.active { color: #fff; background-color: var(--primary-color); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .kpi-card { border-left: 4px solid var(--primary-color); transition: transform 0.2s; border-radius: 12px; }
+        .kpi-card:hover { transform: translateY(-3px); }
+        .table-responsive { max-height: 600px; overflow-y: auto; }
+        .perm-th { font-size: 11px; writing-mode: vertical-rl; transform: rotate(180deg); height: 130px; text-align: right; vertical-align: bottom; padding-bottom: 8px; }
+        .btn-primary, .bg-primary { background-color: var(--primary-color) !important; border-color: var(--primary-color) !important; }
+        .text-primary { color: var(--primary-color) !important; }
+        .card { border-radius: 12px; border: 1px solid var(--border-color); }
+        .bulk-upload-page { padding-top: 2px; }
+        .bulk-module-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 30px;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .bulk-module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.10);
+        }
+        .bulk-module-icon {
+            width: 46px;
+            height: 46px;
+            min-width: 46px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f59e0b;
+            color: #fff;
+            font-size: 21px;
+        }
+        .bulk-module-card h5 { font-size: 19px; }
+        .bulk-module-card p { line-height: 1.55; min-height: 48px; }
+        .bulk-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .bulk-actions .btn, .bulk-module-card > .btn { min-height: 39px; }
+        [data-theme="dark"] .bulk-module-card { box-shadow: 0 3px 12px rgba(0,0,0,0.25); }
+        @media (max-width: 576px) {
+            .bulk-module-card { padding: 22px; }
+            .bulk-actions { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-container" class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+        <div class="card shadow-lg p-4 border-0 rounded-4" style="width: 100%; max-width: 420px;">
+            <div class="text-center mb-4">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style="width: 70px; height: 70px;">
+                    <i class="fa-solid fa-chart-line fa-2x"></i>
+                </div>
+                <h3 class="fw-bold" data-i18n="login_title">نظام إنتاجية العمليات</h3>
+                <p class="text-muted small" id="login-company-subtitle">OPMS Enterprise Productivity Suite (Minutes Logic)</p>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" data-i18n="username_label">اسم المستخدم / المعرف (Username)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="login-username" class="form-control" placeholder="أدخل اسم المستخدم أو المعرف" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold" data-i18n="password_label">كلمة المرور (Password)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="login-password" class="form-control" placeholder="أدخل كلمة المرور" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3 shadow-sm" data-i18n="login_btn">تسجيل الدخول</button>
+                <div id="login-error" class="alert alert-danger mt-3 py-2 d-none text-center small" role="alert"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Wrapper -->
+    <div id="app-container" class="d-none">
+        <div class="wrapper d-flex">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="text-white p-3 flex-shrink-0">
+                <div class="sidebar-header pb-3 mb-3 border-bottom border-secondary d-flex align-items-center justify-content-between">
+                    <h5 class="m-0 fw-bold text-truncate"><i class="fa-solid fa-chart-line me-2 text-primary"></i><span id="sidebar-company-title">OPMS Pro</span></h5>
+                </div>
+                <ul class="nav flex-column gap-1" id="sidebar-menu"></ul>
+            </nav>
+
+            <!-- Page Content Area -->
+            <div id="content" class="flex-grow-1 bg-body">
+                <header class="navbar navbar-expand navbar-light bg-white border-bottom px-4 shadow-sm">
+                    <div class="container-fluid p-0">
+                        <span class="navbar-brand mb-0 h6 fw-bold text-primary" id="current-page-title">Dashboard</span>
+                        <div class="ms-auto d-flex align-items-center gap-2">
+                            <!-- Theme Selector Dropdown (10 Colors + New Dark Mode) -->
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-3 shadow-sm" type="button" data-bs-toggle="dropdown" id="theme-dropdown-btn">
+                                    <i class="fa-solid fa-palette me-1"></i> الثيم والألوان
+                                </button>
+                                <ul class="dropdown-menu shadow border-0" style="max-height: 350px; overflow-y: auto;">
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('default')">🔵 أزرق افتراضي مريح</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('emerald')">🟢 أخضر زمردي</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('violet')">🟣 بنفسجي ملكي</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('amber')">🟠 كهرماني دافئ</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('rose')">🔴 وردي داكن (Rose)</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('cyan')">🟦 سماوي فخم (Cyan)</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('indigo')">🟪 نيلي عميق (Indigo)</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('teal')">🟩 تيل بترولي (Teal)</a></li>
+                                    <li><a class="dropdown-item py-2" href="#" onclick="changeTheme('orange')">🟧 برتقالي ناصع (Orange)</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item py-2 fw-bold text-primary" href="#" onclick="changeTheme('dark')">🌙 الوضع الداكن الاحترافي (Dark)</a></li>
+                                </ul>
+                            </div>
+
+                            <!-- Language Toggle -->
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold shadow-sm" id="lang-toggle-btn" onclick="toggleLanguage()">EN / عربي</button>
+                            
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border shadow-sm" type="button" data-bs-toggle="dropdown">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px;" id="user-avatar-initials">AD</div>
+                                    <span class="fw-semibold" id="current-user-name">Admin</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                    <li><a class="dropdown-item text-danger py-2" href="#" onclick="logoutUser()"><i class="fa-solid fa-right-from-bracket me-2"></i><span data-i18n="logout">تسجيل الخروج</span></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <main class="p-4" id="main-view-container"></main>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="global-file-input" class="d-none" accept=".xlsx, .xls" onchange="processGlobalExcelImport(event)">
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const STORAGE_KEYS = {
+            USERS: 'opms_users', EMPLOYEES: 'opms_employees', TASKS: 'opms_tasks',
+            OPERATIONS: 'opms_operations', SITES: 'opms_sites', SHIFTS: 'opms_shifts',
+            DAILY_INPUT: 'opms_daily_input', SUBMISSION_LOG: 'opms_submission_log', AUDIT: 'opms_audit', SETUP: 'opms_setup'
+        };
+
+        let currentLang = localStorage.getItem('opms_lang') || 'ar';
+        let currentTheme = localStorage.getItem('opms_theme') || 'default';
+        let currentUser = null;
+        let activeImportModule = '';
+        let dashboardChartInstance = null;
+        
+        let globalSelectedDailyEmployee = '';
+        let globalSelectedDailyDate = new Date().toISOString().split('T')[0];
+        let globalSelectedDailyShift = '';
+        let globalSelectedTeamFilter = 'ALL';
+        let globalSendSubmissionEmail = false;
+
+        const I18N = {
+            ar: {
+                login_title: "نظام إنتاجية العمليات",
+                username_label: "اسم المستخدم / المعرف (Username)",
+                password_label: "كلمة المرور (Password)",
+                login_btn: "تسجيل الدخول",
+                logout: "تسجيل الخروج",
+                dashboard: "لوحة القيادة",
+                dailyInput: "الإدخال اليومي (قاعدة البيانات المركزية)",
+                submissionLog: "سجل السبميشن المجمع (Submission Log)",
+                employees: "الموظفون والصلاحيات",
+                tasks: "المقترحات / المهام وفريق العمل",
+                operations: "العمليات",
+                warehouses: "المخازن والمواقع",
+                shifts: "الشيفتات",
+                reports: "التقارير",
+                bulkUpload: "الاستيراد والتصدير الجماعي",
+                setup: "إعدادات النظام",
+                audit: "سجل التدقيق",
+                deleteSelected: "حذف المحدد",
+                clearAll: "مسح الكل",
+                export: "تصدير",
+                exportAll: "تصدير الكل (شامل)",
+                import: "استيراد",
+                addEmployee: "إضافة موظف",
+                addTask: "إضافة مهمة",
+                addOperation: "إضافة عملية",
+                addWarehouse: "إضافة مخزن جديد",
+                addShift: "إضافة شيفت جديد",
+                save: "حفظ وتصدير السبميشن",
+                action: "إجراء"
+            },
+            en: {
+                login_title: "Operations Productivity System",
+                username_label: "Username / ID",
+                password_label: "Password",
+                login_btn: "Login",
+                logout: "Logout",
+                dashboard: "Dashboard",
+                dailyInput: "Daily Input (Central Hub)",
+                submissionLog: "Submission Log Hub",
+                employees: "Employees & Permissions",
+                tasks: "Tasks & Team",
+                operations: "Operations",
+                warehouses: "Warehouses & Sites",
+                shifts: "Shifts",
+                reports: "Reports",
+                bulkUpload: "Bulk Import / Export",
+                setup: "System Setup",
+                audit: "Audit Log",
+                deleteSelected: "Delete Selected",
+                clearAll: "Clear All",
+                export: "Export",
+                exportAll: "Export All (Comprehensive)",
+                import: "Import",
+                addEmployee: "Add Employee",
+                addTask: "Add Task",
+                addOperation: "Add Operation",
+                addWarehouse: "Add Warehouse",
+                addShift: "Add Shift",
+                save: "Save & Submit Log",
+                action: "Action"
+            }
+        };
+
+        function t(key) {
+            return I18N[currentLang][key] || key;
+        }
+
+        const AVAILABLE_PERMISSIONS = [
+            { key: 'dashboard', labelAr: 'لوحة القيادة', labelEn: 'Dashboard' },
+            { key: 'dailyInput', labelAr: 'الإدخال اليومي', labelEn: 'Daily Input' },
+            { key: 'submissionLog', labelAr: 'سجل السبميشن', labelEn: 'Submission Log' },
+            { key: 'inputScope', labelAr: 'تفويض إدخال الفريق', labelEn: 'Team Input Scope' },
+            { key: 'employees', labelAr: 'الموظفون', labelEn: 'Employees' },
+            { key: 'tasks', labelAr: 'المهام', labelEn: 'Tasks' },
+            { key: 'operations', labelAr: 'العمليات', labelEn: 'Operations' },
+            { key: 'warehouses', labelAr: 'المخازن', labelEn: 'Warehouses' },
+            { key: 'shifts', labelAr: 'الشيفتات', labelEn: 'Shifts' },
+            { key: 'reports', labelAr: 'التقارير', labelEn: 'Reports' },
+            { key: 'bulkUpload', labelAr: 'الاستيراد', labelEn: 'Bulk Upload' },
+            { key: 'setup', labelAr: 'الإعدادات', labelEn: 'Setup' },
+            { key: 'audit', labelAr: 'التدقيق', labelEn: 'Audit' }
+        ];
+
+        function changeTheme(themeName) {
+            currentTheme = themeName;
+            localStorage.setItem('opms_theme', themeName);
+            document.documentElement.setAttribute('data-theme', themeName);
+        }
+
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            localStorage.setItem('opms_lang', currentLang);
+            applyLanguageSettings();
+            if (currentUser) {
+                renderNavigation();
+                loadModule(window.currentActiveModule || 'dashboard');
+            }
+        }
+
+        function applyLanguageSettings() {
+            const html = document.documentElement;
+            html.setAttribute('lang', currentLang);
+            html.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+            
+            let bootstrapLink = document.getElementById('bootstrap-css');
+            if (currentLang === 'ar') {
+                bootstrapLink.href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css";
+            } else {
+                bootstrapLink.href = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css";
+            }
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                let k = el.getAttribute('data-i18n');
+                if (I18N[currentLang][k]) el.innerText = I18N[currentLang][k];
+            });
+
+            updateSystemBrandingUI();
+        }
+
+        function updateSystemBrandingUI() {
+            let setup = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETUP)) || { companyName: 'OPMS Enterprise' };
+            let compName = setup.companyName || 'OPMS Enterprise';
+            let sidebarTitle = document.getElementById('sidebar-company-title');
+            if (sidebarTitle) sidebarTitle.innerText = compName;
+        }
+
+        function initStorage() {
+            let adminPermissions = {};
+            AVAILABLE_PERMISSIONS.forEach(p => adminPermissions[p.key] = true);
+            
+            let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
+            let adminUser = users.find(x => x.username === '9256');
+            if (!adminUser) {
+                users.unshift({
+                    id: '9256', name: 'System Admin', username: '9256', password: '9256@', role: 'Admin',
+                    permissions: adminPermissions, status: 'Active'
+                });
+            } else {
+                adminUser.permissions = adminPermissions;
+                adminUser.role = 'Admin';
+                adminUser.status = 'Active';
+            }
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+            if (!localStorage.getItem(STORAGE_KEYS.OPERATIONS)) {
+                localStorage.setItem(STORAGE_KEYS.OPERATIONS, JSON.stringify([
+                    { id: 'OP-01', name: 'WMS' }, { id: 'OP-02', name: 'Stock' }, { id: 'OP-03', name: 'Quality' }, { id: 'OP-04', name: 'Mars factory' }, { id: 'OP-05', name: 'Shell' }
+                ]));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.SITES)) {
+                localStorage.setItem(STORAGE_KEYS.SITES, JSON.stringify([
+                    { id: 'SITE-01', name: 'Warehouse 1', area: 'Zone A' }, { id: 'SITE-02', name: 'Warehouse 2', area: 'Zone B' }
+                ]));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.SHIFTS)) {
+                localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify([
+                    { id: 'SH-01', name: 'Morning Shift', startTime: '08:00', endTime: '16:00', active: true },
+                    { id: 'SH-02', name: 'Evening Shift', startTime: '16:00', endTime: '00:00', active: true },
+                    { id: 'SH-03', name: 'Night Shift', startTime: '00:00', endTime: '08:00', active: true }
+                ]));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.TASKS)) {
+                localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify([
+                    { taskId: 'TSK-01', name: 'Receiving -Import Pallet', operation: 'Mars factory', targetPerMin: 2.5 },
+                    { taskId: 'TSK-02', name: 'Receiving shuttle', operation: 'Mars factory', targetPerMin: 1.8 },
+                    { taskId: 'TSK-03', name: 'Picking-SV', operation: 'Shell', targetPerMin: 3.0 }
+                ]));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) {
+                let defaultEmpPerms = { dashboard: true, dailyInput: true, submissionLog: true, inputScope: false, employees: false, tasks: false, operations: false, warehouses: false, shifts: false, reports: false, bulkUpload: false, setup: false, audit: false };
+                localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify([
+                    { empId: 'EMP-001', name: 'Shehata Abdelhakiem Hashem', username: 'EMP-001', password: 'EMP-001@', role: 'Operator', operation: 'Mars factory', site: 'Warehouse 1', department: 'Logistics', defaultShift: 'Morning Shift', status: 'Active', email: 'shehata@opms.com', phone: '01000000000', permissions: defaultEmpPerms },
+                    { empId: 'EMP-002', name: 'Mahmoud Sayed Ali Sayed', username: 'EMP-002', password: 'EMP-002@', role: 'Operator', operation: 'Shell', site: 'Warehouse 1', status: 'Active', permissions: defaultEmpPerms }
+                ]));
+            }
+            syncEmployeesToUsers();
+
+            if (!localStorage.getItem(STORAGE_KEYS.DAILY_INPUT)) {
+                const today = new Date().toISOString().split('T')[0];
+                let tasksArr = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS));
+                let initialDaily = tasksArr.map((tsk, idx) => ({
+                    id: idx + 1,
+                    date: today,
+                    employee: 'Shehata Abdelhakiem Hashem',
+                    operation: tsk.operation || 'Mars factory',
+                    site: 'Warehouse 1',
+                    shift: 'Morning Shift',
+                    task: tsk.name,
+                    targetPerMin: tsk.targetPerMin || 2.0,
+                    quantity: 0,
+                    consumedMinutes: 420,
+                    productivityPct: 0,
+                    notes: ''
+                }));
+                localStorage.setItem(STORAGE_KEYS.DAILY_INPUT, JSON.stringify(initialDaily));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.SUBMISSION_LOG)) {
+                localStorage.setItem(STORAGE_KEYS.SUBMISSION_LOG, JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.SETUP)) {
+                localStorage.setItem(STORAGE_KEYS.SETUP, JSON.stringify({ companyName: 'OPMS Enterprise', managerEmail: '' }));
+            } else {
+                let existingSetup = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETUP)) || {};
+                if (existingSetup.managerEmail === undefined) existingSetup.managerEmail = '';
+                if (!existingSetup.companyName) existingSetup.companyName = 'OPMS Enterprise';
+                localStorage.setItem(STORAGE_KEYS.SETUP, JSON.stringify(existingSetup));
+            }
+            if (!localStorage.getItem(STORAGE_KEYS.AUDIT)) {
+                localStorage.setItem(STORAGE_KEYS.AUDIT, JSON.stringify([
+                    { timestamp: new Date().toLocaleString(), user: 'System Admin', action: 'Init', module: 'Setup', details: 'Initialized system with Minutes-based logic.' }
+                ]));
+            }
+        }
+
+        function syncEmployeesToUsers() {
+            let emps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
+            
+            emps.forEach(emp => {
+                emp.status = 'Active';
+                let primaryKey = (emp.empId || '').toString().trim();
+                let uName = (emp.username || primaryKey).toString().trim();
+                let pWord = (emp.password || (primaryKey + '@')).toString().trim();
+
+                let existingUser = users.find(u => 
+                    (u.username && u.username.toString().trim() === uName) || 
+                    (u.username && u.username.toString().trim() === primaryKey) || 
+                    (u.id && u.id.toString().trim() === primaryKey)
+                );
+
+                let defaultPerms = emp.permissions || { dashboard: true, dailyInput: true, submissionLog: true, inputScope: false, employees: false, tasks: false, operations: false, warehouses: false, shifts: false, reports: false, bulkUpload: false, setup: false, audit: false };
+                
+                if (!existingUser) {
+                    users.push({
+                        id: primaryKey,
+                        name: emp.name || 'Employee',
+                        username: uName || primaryKey,
+                        password: pWord,
+                        role: emp.role || 'Operator',
+                        operation: emp.operation || 'WMS',
+                        permissions: defaultPerms,
+                        status: 'Active'
+                    });
+                } else {
+                    existingUser.name = emp.name || existingUser.name;
+                    existingUser.operation = emp.operation || existingUser.operation || 'WMS';
+                    existingUser.role = emp.role || existingUser.role || 'Operator';
+                    existingUser.status = 'Active';
+                    if (emp.password) existingUser.password = emp.password.toString().trim();
+                    if (uName) existingUser.username = uName;
+                    if (emp.permissions) existingUser.permissions = emp.permissions;
+                }
+            });
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+        }
+
+        function logAudit(action, module, details) {
+            let audit = JSON.parse(localStorage.getItem(STORAGE_KEYS.AUDIT)) || [];
+            audit.unshift({ timestamp: new Date().toLocaleString(), user: currentUser ? currentUser.name : 'System', action, module, details });
+            localStorage.setItem(STORAGE_KEYS.AUDIT, JSON.stringify(audit));
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            let u = document.getElementById('login-username').value;
+            let p = document.getElementById('login-password').value;
+            if (authenticateUser(u, p)) {
+                document.getElementById('login-container').classList.add('d-none');
+                document.getElementById('app-container').classList.remove('d-none');
+                document.getElementById('user-avatar-initials').innerText = currentUser.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('current-user-name').innerText = currentUser.name;
+                updateSystemBrandingUI();
+                renderNavigation();
+                loadModule('dashboard');
+            } else {
+                let err = document.getElementById('login-error');
+                err.classList.remove('d-none');
+                err.innerText = currentLang === 'ar' ? 'خطأ في اسم المستخدم أو كلمة المرور' : 'Invalid username or password';
+            }
+        }
+
+        function authenticateUser(u, p) {
+            syncEmployeesToUsers();
+            let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
+            let cleanU = u.toString().trim();
+            let cleanP = p.toString().trim();
+
+            let user = users.find(x => 
+                ((x.username && x.username.toString().trim() === cleanU) || (x.id && x.id.toString().trim() === cleanU)) && 
+                (x.password && x.password.toString().trim() === cleanP)
+            );
+
+            if (user) {
+                user.status = 'Active';
+                if (user.role === 'Admin' || user.username === '9256') {
+                    let adminPerms = {};
+                    AVAILABLE_PERMISSIONS.forEach(ap => adminPerms[ap.key] = true);
+                    user.permissions = adminPerms;
+                    user.operation = 'All';
+                }
+                currentUser = user;
+                localStorage.setItem('opms_current_user', JSON.stringify(user));
+                logAudit('Login', 'Auth', `User ${user.name} logged in.`);
+                return true;
+            }
+            return false;
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('opms_current_user');
+            location.reload();
+        }
+
+        function renderNavigation() {
+            const menu = document.getElementById('sidebar-menu');
+            menu.innerHTML = '';
+            const navItems = [
+                { id: 'dashboard', icon: 'fa-chart-pie' },
+                { id: 'dailyInput', icon: 'fa-keyboard' },
+                { id: 'submissionLog', icon: 'fa-clipboard-list' },
+                { id: 'employees', icon: 'fa-users' },
+                { id: 'tasks', icon: 'fa-tasks' },
+                { id: 'operations', icon: 'fa-cogs' },
+                { id: 'warehouses', icon: 'fa-warehouse' },
+                { id: 'shifts', icon: 'fa-clock' },
+                { id: 'reports', icon: 'fa-file-excel' },
+                { id: 'bulkUpload', icon: 'fa-file-arrow-up' },
+                { id: 'setup', icon: 'fa-sliders' },
+                { id: 'audit', icon: 'fa-history' }
+            ];
+
+            navItems.forEach(item => {
+                if (currentUser.role === 'Admin' || currentUser.username === '9256' || (currentUser.permissions && currentUser.permissions[item.id])) {
+                    let li = document.createElement('li');
+                    li.className = 'nav-item';
+                    let labelText = t(item.id);
+                    li.innerHTML = `<a href="#" class="nav-link" onclick="loadModule('${item.id}')"><i class="fa-solid ${item.icon} me-2"></i><span>${labelText}</span></a>`;
+                    menu.appendChild(li);
+                }
+            });
+        }
+
+        function loadModule(id) {
+            window.currentActiveModule = id;
+            document.getElementById('current-page-title').innerText = t(id);
+            const container = document.getElementById('main-view-container');
+            container.innerHTML = '';
+
+            if (id === 'dashboard') renderDashboard(container);
+            else if (id === 'dailyInput') renderDailyInput(container);
+            else if (id === 'submissionLog') renderSubmissionLog(container);
+            else if (id === 'employees') renderEmployees(container);
+            else if (id === 'tasks') renderTasks(container);
+            else if (id === 'operations') renderOperations(container);
+            else if (id === 'warehouses') renderWarehouses(container);
+            else if (id === 'shifts') renderShifts(container);
+            else if (id === 'reports') renderReports(container);
+            else if (id === 'bulkUpload') renderBulkUpload(container);
+            else if (id === 'setup') renderSetup(container);
+            else if (id === 'audit') renderAudit(container);
+        }
+
+        function toggleSelectAll(masterCheckbox, rowClass) {
+            const checkboxes = document.querySelectorAll('.' + rowClass);
+            checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        }
+
+        function deleteSelectedRows(storageKey, rowClass, reloadModuleFn) {
+            const checkedBoxes = document.querySelectorAll('.' + rowClass + ':checked');
+            if (checkedBoxes.length === 0) {
+                alert(currentLang === 'ar' ? 'الرجاء تحديد عنصر واحد على الأقل للحذف.' : 'Please select at least one item to delete.');
+                return;
+            }
+            if (confirm(currentLang === 'ar' ? `هل أنت متأكد من حذف عدد ${checkedBoxes.length} عنصر المحددة؟` : `Are you sure you want to delete ${checkedBoxes.length} selected items?`)) {
+                let idsToDelete = Array.from(checkedBoxes).map(cb => cb.value.toString().trim());
+                let data = JSON.parse(localStorage.getItem(storageKey)) || [];
+                
+                let filtered = data.filter((item, index) => {
+                    let uniqueId = (storageKey === STORAGE_KEYS.EMPLOYEES) ? (item.empId || '').toString().trim() : 
+                                   (storageKey === STORAGE_KEYS.TASKS) ? (item.taskId || '').toString().trim() : 
+                                   (storageKey === STORAGE_KEYS.OPERATIONS || storageKey === STORAGE_KEYS.SITES || storageKey === STORAGE_KEYS.SHIFTS) ? (item.id || '').toString().trim() : index.toString();
+                    return !idsToDelete.includes(uniqueId);
+                });
+
+                localStorage.setItem(storageKey, JSON.stringify(filtered));
+                if (storageKey === STORAGE_KEYS.EMPLOYEES) syncEmployeesToUsers();
+                logAudit('Delete', storageKey, `Deleted ${checkedBoxes.length} items.`);
+                reloadModuleFn();
+            }
+        }
+
+        function deleteSingleRow(storageKey, idValue, reloadModuleFn) {
+            if (confirm(currentLang === 'ar' ? `هل أنت متأكد من حذف هذا العنصر؟` : `Are you sure you want to delete this item?`)) {
+                let data = JSON.parse(localStorage.getItem(storageKey)) || [];
+                let cleanTargetId = (idValue !== undefined && idValue !== null) ? idValue.toString().trim() : '';
+
+                let filtered = data.filter((item, index) => {
+                    let uniqueId = (storageKey === STORAGE_KEYS.EMPLOYEES) ? (item.empId || '').toString().trim() : 
+                                   (storageKey === STORAGE_KEYS.TASKS) ? (item.taskId || '').toString().trim() : 
+                                   (storageKey === STORAGE_KEYS.OPERATIONS || storageKey === STORAGE_KEYS.SITES || storageKey === STORAGE_KEYS.SHIFTS) ? (item.id || '').toString().trim() : index.toString();
+                    return uniqueId !== cleanTargetId;
+                });
+
+                localStorage.setItem(storageKey, JSON.stringify(filtered));
+                if (storageKey === STORAGE_KEYS.EMPLOYEES) syncEmployeesToUsers();
+                logAudit('Delete Single', storageKey, `Deleted item ${cleanTargetId}`);
+                reloadModuleFn();
+            }
+        }
+
+        function deleteAllRows(storageKey, reloadModuleFn) {
+            if (confirm(currentLang === 'ar' ? 'تحذير: هل تريد مسح كافة البيانات في هذا القسم تماماً؟' : 'Warning: Do you want to clear all records in this section?')) {
+                localStorage.setItem(storageKey, JSON.stringify([]));
+                if (storageKey === STORAGE_KEYS.EMPLOYEES) syncEmployeesToUsers();
+                logAudit('Clear All', storageKey, 'Cleared all records.');
+                reloadModuleFn();
+            }
+        }
+
+        function downloadTemplate(type) {
+            let wb = XLSX.utils.book_new();
+            let sampleData = [];
+            if (type === 'Employees') {
+                let row = { empId: "1111", name: "Mohamed Ali", username: "1111", password: "1111", role: "Operator", operation: "WMS", site: "Warehouse 1" };
+                AVAILABLE_PERMISSIONS.forEach(ap => { row[ap.key] = (ap.key === 'dashboard' || ap.key === 'dailyInput') ? true : false; });
+                sampleData.push(row);
+            } else if (type === 'Tasks') {
+                sampleData.push({ taskId: "TSK-01", name: "Receiving-Off Imp Pallets", operation: "Mars factory", targetPerMin: 2.5 });
+            } else if (type === 'Operations') {
+                sampleData.push({ id: "OP-04", name: "Dispatch" });
+            } else if (type === 'Warehouses') {
+                sampleData.push({ id: "SITE-03", name: "Warehouse 3", area: "Zone C" });
+            } else if (type === 'Shifts') {
+                sampleData.push({ id: "SH-04", name: "Custom Shift", startTime: "06:00", endTime: "14:00" });
+            } else if (type === 'DailyInput') {
+                sampleData.push({ date: "2026-09-17", employee: "Shehata Abdelhakiem Hashem", operation: "Mars factory", site: "Warehouse 1", shift: "Morning Shift", task: "Receiving-Return / Line", targetPerMin: 2.5, quantity: 100, consumedMinutes: 420, notes: "" });
+            }
+            let ws = XLSX.utils.json_to_sheet(sampleData);
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, `OPMS_${type}_Template.xlsx`);
+        }
+
+        function exportModuleData(storageKey, fileName) {
+            let wb = XLSX.utils.book_new();
+            let data = JSON.parse(localStorage.getItem(storageKey)) || [];
+            let ws = XLSX.utils.json_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, "Data");
+            XLSX.writeFile(wb, `${fileName}_Export.xlsx`);
+        }
+
+        function exportAllSystemData() {
+            let wb = XLSX.utils.book_new();
+            let datasets = [
+                { key: STORAGE_KEYS.EMPLOYEES, name: 'Employees' },
+                { key: STORAGE_KEYS.TASKS, name: 'Tasks' },
+                { key: STORAGE_KEYS.OPERATIONS, name: 'Operations' },
+                { key: STORAGE_KEYS.SITES, name: 'Warehouses' },
+                { key: STORAGE_KEYS.SHIFTS, name: 'Shifts' },
+                { key: STORAGE_KEYS.DAILY_INPUT, name: 'Daily Input' },
+                { key: STORAGE_KEYS.SUBMISSION_LOG, name: 'Submission Log' },
+                { key: STORAGE_KEYS.AUDIT, name: 'Audit Log' }
+            ];
+
+            datasets.forEach(ds => {
+                let data = JSON.parse(localStorage.getItem(ds.key)) || [];
+                if (data.length === 0) data = [{ info: "No records found" }];
+                let ws = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, ds.name);
+            });
+
+            XLSX.writeFile(wb, `OPMS_Comprehensive_Export_All_${new Date().toISOString().split('T')[0]}.xlsx`);
+            logAudit('Export All', 'System', 'Exported comprehensive system dataset.');
+        }
+
+        function triggerModuleImport(moduleKey) {
+            activeImportModule = moduleKey;
+            document.getElementById('global-file-input').click();
+        }
+
+        function processGlobalExcelImport(e) {
+            let file = e.target.files[0];
+            if (!file || !activeImportModule) return;
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                let data = new Uint8Array(evt.target.result);
+                let workbook = XLSX.read(data, {type: 'array'});
+                let rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval: ""});
+                if (rows.length > 0) {
+                    let storageKey = STORAGE_KEYS.TASKS;
+                    if (activeImportModule === 'Employees') {
+                        storageKey = STORAGE_KEYS.EMPLOYEES;
+                        rows = rows.map(r => {
+                            let permissions = {};
+                            AVAILABLE_PERMISSIONS.forEach(ap => {
+                                let val = r[ap.key];
+                                if (val === true || val === 'TRUE' || val === 'true' || val === 1 || val === '1') {
+                                    permissions[ap.key] = true;
+                                } else {
+                                    permissions[ap.key] = false;
+                                }
+                                delete r[ap.key];
+                            });
+                            let generatedId = r.empId ? r.empId.toString() : ('EMP-' + Math.floor(Math.random()*1000));
+                            return {
+                                empId: generatedId,
+                                name: r.name || 'Unnamed',
+                                username: r.username ? r.username.toString() : generatedId,
+                                password: r.password ? r.password.toString() : (generatedId + '@'),
+                                role: r.role || 'Operator',
+                                operation: r.operation || 'WMS',
+                                site: r.site || 'Warehouse 1',
+                                status: 'Active',
+                                permissions: permissions
+                            };
+                        });
+                    } else if (activeImportModule === 'Tasks') {
+                        storageKey = STORAGE_KEYS.TASKS;
+                        rows = rows.map(r => ({
+                            taskId: r.taskId !== undefined && r.taskId !== "" ? r.taskId.toString() : ('TSK-' + Math.floor(Math.random()*1000)),
+                            name: r.name !== undefined && r.name !== "" ? r.name.toString() : 'Unnamed Task',
+                            operation: r.operation !== undefined && r.operation !== "" ? r.operation.toString() : 'WMS',
+                            targetPerMin: r.targetPerMin !== undefined && r.targetPerMin !== "" ? parseFloat(r.targetPerMin) : 2.0
+                        }));
+                    } else if (activeImportModule === 'Operations') {
+                        storageKey = STORAGE_KEYS.OPERATIONS;
+                        rows = rows.map(r => ({
+                            id: r.id ? r.id.toString() : ('OP-' + Math.floor(Math.random()*100)),
+                            name: r.name || 'Unnamed Operation'
+                        }));
+                    } else if (activeImportModule === 'Warehouses') {
+                        storageKey = STORAGE_KEYS.SITES;
+                        rows = rows.map(r => ({
+                            id: r.id ? r.id.toString() : ('SITE-' + Math.floor(Math.random()*100)),
+                            name: r.name || 'Unnamed Warehouse',
+                            area: r.area || 'General Zone'
+                        }));
+                    } else if (activeImportModule === 'Shifts') {
+                        storageKey = STORAGE_KEYS.SHIFTS;
+                        rows = rows.map(r => ({
+                            id: r.id ? r.id.toString() : ('SH-' + Math.floor(Math.random()*100)),
+                            name: r.name || 'Unnamed Shift',
+                            startTime: r.startTime || '08:00',
+                            endTime: r.endTime || '16:00',
+                            active: true
+                        }));
+                    } else if (activeImportModule === 'DailyInput') {
+                        storageKey = STORAGE_KEYS.DAILY_INPUT;
+                        rows = rows.map(r => {
+                            let qty = parseFloat(r.quantity) || 0;
+                            let mins = parseFloat(r.consumedMinutes) || 420;
+                            let targetMin = parseFloat(r.targetPerMin) || 2.0;
+                            let prod = mins > 0 ? parseFloat((((qty * targetMin) / mins) * 100).toFixed(2)) : 0;
+                            return {
+                                date: r.date || new Date().toISOString().split('T')[0],
+                                employee: r.employee || 'Shehata Abdelhakiem Hashem',
+                                operation: r.operation || 'Mars factory',
+                                site: r.site || 'Warehouse 1',
+                                shift: r.shift || 'Morning Shift',
+                                task: r.task || 'General Task',
+                                targetPerMin: targetMin,
+                                quantity: qty,
+                                consumedMinutes: mins,
+                                productivityPct: prod,
+                                notes: r.notes || ''
+                            };
+                        });
+                    }
+
+                    let existing = JSON.parse(localStorage.getItem(storageKey)) || [];
+                    
+                    if (activeImportModule === 'DailyInput') {
+                        rows.forEach(newItem => {
+                            let idx = existing.findIndex(ex => ex.employee === newItem.employee && ex.task === newItem.task && ex.date === newItem.date && ex.shift === newItem.shift);
+                            if (idx >= 0) {
+                                existing[idx] = { ...existing[idx], ...newItem };
+                            } else {
+                                existing.push(newItem);
+                            }
+                        });
+                    } else {
+                        rows.forEach(newItem => {
+                            let uniqueKey = (newItem.empId || newItem.taskId || newItem.id || '').toString();
+                            let idx = existing.findIndex(ex => (ex.empId || ex.taskId || ex.id || '').toString() === uniqueKey);
+                            if (idx >= 0) {
+                                existing[idx] = { ...existing[idx], ...newItem };
+                            } else {
+                                existing.push(newItem);
+                            }
+                        });
+                    }
+
+                    localStorage.setItem(storageKey, JSON.stringify(existing));
+                    if (storageKey === STORAGE_KEYS.EMPLOYEES) syncEmployeesToUsers();
+                    alert(currentLang === 'ar' ? `تم استيراد وتحديث ${rows.length} سجل بنجاح!` : `Successfully imported and updated ${rows.length} records!`);
+                    let targetMod = activeImportModule.toLowerCase() === 'warehouses' ? 'warehouses' : (activeImportModule.toLowerCase() === 'dailyinput' ? 'dailyInput' : activeImportModule.toLowerCase());
+                    loadModule(targetMod);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* لوحة القيادة الديناميكية (Dashboard)                                         */
+        /* -------------------------------------------------------------------------- */
+        function renderDashboard(container) {
+            const employees = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            const ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            const sites = JSON.parse(localStorage.getItem(STORAGE_KEYS.SITES)) || [];
+            const tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || [];
+
+            container.innerHTML = `
+                <div class="card p-3 shadow-sm mb-4 bg-light border-0">
+                    <h6 class="fw-bold mb-2 text-primary"><i class="fa-solid fa-filter me-2"></i>${currentLang === 'ar' ? 'فلاتر لوحة القيادة الديناميكية' : 'Dynamic Dashboard Filters'}</h6>
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">${currentLang === 'ar' ? 'الموظف' : 'Employee'}</label>
+                            <select id="filter-emp" class="form-select form-select-sm" onchange="applyDashboardFilters()">
+                                <option value="ALL">${currentLang === 'ar' ? 'كل الموظفين' : 'All Employees'}</option>
+                                ${employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">${currentLang === 'ar' ? 'العملية' : 'Operation'}</label>
+                            <select id="filter-op" class="form-select form-select-sm" onchange="applyDashboardFilters()">
+                                <option value="ALL">${currentLang === 'ar' ? 'كل العمليات' : 'All Operations'}</option>
+                                ${ops.map(o => `<option value="${o.name}">${o.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">${currentLang === 'ar' ? 'المخزن / الموقع' : 'Warehouse / Site'}</label>
+                            <select id="filter-site" class="form-select form-select-sm" onchange="applyDashboardFilters()">
+                                <option value="ALL">${currentLang === 'ar' ? 'كل المخازن' : 'All Sites'}</option>
+                                ${sites.map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">${currentLang === 'ar' ? 'المهمة' : 'Task'}</label>
+                            <select id="filter-task" class="form-select form-select-sm" onchange="applyDashboardFilters()">
+                                <option value="ALL">${currentLang === 'ar' ? 'كل المهام' : 'All Tasks'}</option>
+                                ${tasks.map(ts => `<option value="${ts.name}">${ts.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">${currentLang === 'ar' ? 'من تاريخ' : 'From Date'}</label>
+                            <input type="date" id="filter-date-from" class="form-control form-control-sm" onchange="applyDashboardFilters()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">${currentLang === 'ar' ? 'إلى تاريخ' : 'To Date'}</label>
+                            <input type="date" id="filter-date-to" class="form-control form-control-sm" onchange="applyDashboardFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4" id="kpi-cards-container"></div>
+
+                <div class="card p-4 shadow-sm mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold m-0">${currentLang === 'ar' ? 'تحليلات الإنتاجية المفلترة ((الكمية × التايم) ÷ دقائق الشفت) × 100' : 'Filtered Productivity Analytics'}</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-success" onclick="exportModuleData(STORAGE_KEYS.SUBMISSION_LOG, 'Dashboard_Productivity')"><i class="fa-solid fa-file-excel me-1"></i>${t('export')}</button>
+                            <button class="btn btn-sm btn-success fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        </div>
+                    </div>
+                    <canvas id="prodChart" height="100"></canvas>
+                </div>`;
+            
+            applyDashboardFilters();
+        }
+
+        function applyDashboardFilters() {
+            let subLogs = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBMISSION_LOG)) || [];
+            
+            let fEmp = document.getElementById('filter-emp').value;
+            let fOp = document.getElementById('filter-op').value;
+            let fSite = document.getElementById('filter-site').value;
+            let fTask = document.getElementById('filter-task').value;
+            let fDateFrom = document.getElementById('filter-date-from').value;
+            let fDateTo = document.getElementById('filter-date-to').value;
+
+            let filtered = subLogs.filter(d => {
+                if (fEmp !== 'ALL' && d.employee !== fEmp) return false;
+                if (fOp !== 'ALL' && d.operation !== fOp) return false;
+                if (fSite !== 'ALL' && d.site !== fSite) return false;
+                if (fTask !== 'ALL' && d.task !== fTask) return false;
+                if (fDateFrom && d.date < fDateFrom) return false;
+                if (fDateTo && d.date > fDateTo) return false;
+                return true;
+            });
+
+            let totalQty = filtered.reduce((sum, x) => sum + (parseFloat(x.quantity) || 0), 0);
+            let avgProd = filtered.length > 0 ? (filtered.reduce((sum, x) => sum + (parseFloat(x.productivityPct) || 0), 0) / filtered.length).toFixed(1) : 0;
+            let totalMins = filtered.reduce((sum, x) => sum + (parseFloat(x.consumedMinutes) || 0), 0);
+            let totalRecords = filtered.length;
+
+            document.getElementById('kpi-cards-container').innerHTML = `
+                <div class="col-md-3"><div class="card p-3 kpi-card shadow-sm"><h6 class="text-muted">${currentLang === 'ar' ? 'المهام المُنجزة' : 'Completed Tasks'}</h6><h3 class="fw-bold text-primary">${totalRecords}</h3></div></div>
+                <div class="col-md-3"><div class="card p-3 kpi-card shadow-sm"><h6 class="text-muted">${currentLang === 'ar' ? 'إجمالي الكميات المنتجة' : 'Total Quantity'}</h6><h3 class="fw-bold text-success">${totalQty.toLocaleString()}</h3></div></div>
+                <div class="col-md-3"><div class="card p-3 kpi-card shadow-sm"><h6 class="text-muted">${currentLang === 'ar' ? 'متوسط الإنتاجية %' : 'Avg Productivity %'}</h6><h3 class="fw-bold text-info">${avgProd}%</h3></div></div>
+                <div class="col-md-3"><div class="card p-3 kpi-card shadow-sm"><h6 class="text-muted">${currentLang === 'ar' ? 'إجمالي الدقائق المستهلكة' : 'Total Mins'}</h6><h3 class="fw-bold text-warning">${totalMins.toLocaleString()}</h3></div></div>
+            `;
+
+            let dates = [...new Set(filtered.map(x => x.date))].sort();
+            let chartData = dates.map(dt => {
+                let dayItems = filtered.filter(x => x.date === dt);
+                let dayAvg = dayItems.reduce((s, x) => s + (parseFloat(x.productivityPct) || 0), 0) / (dayItems.length || 1);
+                return dayAvg.toFixed(2);
+            });
+
+            if (dashboardChartInstance) dashboardChartInstance.destroy();
+            dashboardChartInstance = new Chart(document.getElementById('prodChart').getContext('2d'), {
+                type: 'line',
+                data: { 
+                    labels: dates, 
+                    datasets: [{ 
+                        label: 'Productivity % (((Qty * Target) / Mins) * 100)', 
+                        data: chartData, 
+                        borderColor: 'var(--primary-color)', 
+                        fill: true, 
+                        backgroundColor: 'rgba(37,99,235,0.1)',
+                        tension: 0.3
+                    }] 
+                },
+                options: { responsive: true, maintainAspectRatio: true }
+            });
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* سجل السبميشن المجمع (Submission Log Hub)                                    */
+        /* -------------------------------------------------------------------------- */
+        function renderSubmissionLog(container) {
+            let subLogs = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBMISSION_LOG)) || [];
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'سجل السبميشن المجمع (Submission Log)' : 'Submission Log Hub'}</h4>
+                        <small class="text-muted">${currentLang === 'ar' ? 'يحتوي على كافة عمليات الحفظ والإرسال المعتمدة لكل شيفت وموظف' : 'Contains all submitted and saved shift logs'}</small>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteAllRows(STORAGE_KEYS.SUBMISSION_LOG, ()=>renderSubmissionLog(container))"><i class="fa-solid fa-trash me-1"></i>${t('clearAll')}</button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.SUBMISSION_LOG, 'Submission_Log_Hub')"><i class="fa-solid fa-file-excel me-1"></i>${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                    </div>
+                </div>
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>${currentLang === 'ar' ? 'وقت الإرسال' : 'Submit Time'}</th>
+                                    <th>${currentLang === 'ar' ? 'التاريخ' : 'Date'}</th>
+                                    <th>${currentLang === 'ar' ? 'الشيفت' : 'Shift'}</th>
+                                    <th class="text-start">${currentLang === 'ar' ? 'الموظف' : 'Employee'}</th>
+                                    <th>${currentLang === 'ar' ? 'العملية' : 'Operation'}</th>
+                                    <th class="text-start">${currentLang === 'ar' ? 'المهمة' : 'Task'}</th>
+                                    <th>${currentLang === 'ar' ? 'التايم/دقيقة' : 'Target/Min'}</th>
+                                    <th>${currentLang === 'ar' ? 'الكمية' : 'Quantity'}</th>
+                                    <th>${currentLang === 'ar' ? 'دقائق الشفت' : 'Shift Mins'}</th>
+                                    <th>${currentLang === 'ar' ? 'الإنتاجية %' : 'Productivity %'}</th>
+                                    <th>${currentLang === 'ar' ? 'ملاحظات' : 'Notes'}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${subLogs.length === 0 ? `<tr><td colspan="12" class="text-muted py-4">${currentLang === 'ar' ? 'لا توجد سجلات سبميشن محفوظة حتى الآن' : 'No submission logs found yet.'}</td></tr>` : 
+                                subLogs.map((log, idx) => `
+                                <tr>
+                                    <td class="fw-bold">${idx + 1}</td>
+                                    <td><small class="text-muted">${log.submitTimestamp || '-'}</small></td>
+                                    <td class="fw-bold">${log.date}</td>
+                                    <td><span class="badge bg-dark">${log.shift}</span></td>
+                                    <td class="text-start fw-bold text-primary">${log.employee}</td>
+                                    <td><span class="badge bg-secondary">${log.operation}</span></td>
+                                    <td class="text-start">${log.task}</td>
+                                    <td class="fw-bold text-secondary">${log.targetPerMin || 0}</td>
+                                    <td class="fw-bold text-success">${log.quantity}</td>
+                                    <td>${log.consumedMinutes}</td>
+                                    <td><span class="badge bg-success">${log.productivityPct}%</span></td>
+                                    <td><small>${log.notes || '-'}</small></td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* إدارة الموظفون والصلاحيات                                                   */
+        /* -------------------------------------------------------------------------- */
+        function renderEmployees(container) {
+            let isAdmin = currentUser.role === 'Admin' || currentUser.username === '9256';
+            if (!isAdmin) {
+                container.innerHTML = `
+                    <div class="alert alert-warning text-center p-5">
+                        <i class="fa-solid fa-lock fa-3x mb-3 text-warning"></i>
+                        <h4 class="fw-bold">${currentLang === 'ar' ? 'عفواً، هذه الصفحة مخصصة للمدير (Admin) فقط لحماية سرية بيانات المستخدمين.' : 'Access restricted to Admin.'}</h4>
+                    </div>`;
+                return;
+            }
+
+            let emps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'إدارة الموظفون والصلاحيات (إعدادات سرية)' : 'Employees & Permissions (Admin Secured)'}</h4>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows(STORAGE_KEYS.EMPLOYEES, 'emp-checkbox', ()=>renderEmployees(container))"><i class="fa-solid fa-trash me-1"></i>${t('deleteSelected')}</button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="deleteAllRows(STORAGE_KEYS.EMPLOYEES, ()=>renderEmployees(container))"><i class="fa-solid fa-ban me-1"></i>${t('clearAll')}</button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadTemplate('Employees')">Template</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="triggerModuleImport('Employees')">${t('import')}</button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.EMPLOYEES, 'Employees')">${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        <button class="btn btn-primary btn-sm" onclick="addSampleEmployee()"><i class="fa-solid fa-plus me-1"></i>${t('addEmployee')}</button>
+                    </div>
+                </div>
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="30"><input type="checkbox" onchange="toggleSelectAll(this, 'emp-checkbox')"></th>
+                                    <th>ID</th>
+                                    <th class="text-start">Name & Username</th>
+                                    <th>Password (Secured)</th>
+                                    <th>Role / Operation</th>
+                                    ${AVAILABLE_PERMISSIONS.map(ap => `<th class="perm-th">${currentLang === 'ar' ? ap.labelAr : ap.labelEn}</th>`).join('')}
+                                    <th width="70">${t('action')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${emps.map(e => {
+                                    let p = e.permissions || {};
+                                    return `
+                                        <tr>
+                                            <td><input type="checkbox" class="emp-checkbox" value="${e.empId}"></td>
+                                            <td class="fw-bold"><input type="text" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" value="${e.empId}" onchange="updateEmpField('${e.empId}', 'empId', this.value)"></td>
+                                            <td class="text-start">
+                                                <input type="text" class="form-control form-control-sm mb-1 fw-bold" value="${e.name}" onchange="updateEmpField('${e.empId}', 'name', this.value)">
+                                                <input type="text" class="form-control form-control-sm text-muted" value="${e.username || e.empId}" onchange="updateEmpField('${e.empId}', 'username', this.value)">
+                                            </td>
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="password" class="form-control text-center" style="width: 90px;" value="${e.password || (e.empId + '@')}" id="pwd_${e.empId}" onchange="updateEmpField('${e.empId}', 'password', this.value)">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="let el=document.getElementById('pwd_${e.empId}'); el.type = el.type === 'password' ? 'text' : 'password';"><i class="fa-solid fa-eye"></i></button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm mb-1" onchange="updateEmpField('${e.empId}', 'role', this.value)">
+                                                    <option value="Operator" ${e.role === 'Operator' ? 'selected' : ''}>Operator</option>
+                                                    <option value="Admin" ${e.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                                                </select>
+                                                <select class="form-select form-select-sm" onchange="updateEmpField('${e.empId}', 'operation', this.value)">
+                                                    ${ops.map(o => `<option value="${o.name}" ${e.operation === o.name ? 'selected' : ''}>${o.name}</option>`).join('')}
+                                                </select>
+                                            </td>
+                                            ${AVAILABLE_PERMISSIONS.map(ap => `
+                                                <td>
+                                                    <input type="checkbox" class="form-check-input emp-perm-box" data-empid="${e.empId}" data-permkey="${ap.key}" ${p[ap.key] ? 'checked' : ''} onchange="saveInlinePermission('${e.empId}', '${ap.key}', this.checked)">
+                                                </td>
+                                            `).join('')}
+                                            <td>
+                                                <button class="btn btn-outline-danger btn-sm" onclick="deleteSingleRow(STORAGE_KEYS.EMPLOYEES, '${e.empId}', ()=>renderEmployees(container))"><i class="fa-solid fa-trash"></i></button>
+                                            </td>
+                                        </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function updateEmpField(empId, field, value) {
+            let emps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            let emp = emps.find(x => x.empId === empId);
+            if(emp) {
+                emp[field] = value;
+                if(field === 'empId' && (!emp.username || emp.username === empId)) {
+                    emp.username = value;
+                }
+                localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(emps));
+                syncEmployeesToUsers();
+            }
+        }
+
+        function saveInlinePermission(empId, permKey, isChecked) {
+            let emps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            let emp = emps.find(x => x.empId === empId);
+            if(emp) {
+                if(!emp.permissions) emp.permissions = {};
+                emp.permissions[permKey] = isChecked;
+                localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(emps));
+                syncEmployeesToUsers();
+            }
+        }
+
+        function addSampleEmployee() {
+            let emps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            let newId = 'EMP-' + (emps.length + 10).toString();
+            let defaultPerms = { dashboard: true, dailyInput: true, submissionLog: true, inputScope: false, employees: false, tasks: false, operations: false, warehouses: false, shifts: false, reports: false, bulkUpload: false, setup: false, audit: false };
+            emps.push({
+                empId: newId,
+                name: 'New Employee ' + (emps.length + 1),
+                username: newId,
+                password: newId + '@',
+                role: 'Operator',
+                operation: ops[0] ? ops[0].name : 'WMS',
+                site: 'Warehouse 1',
+                status: 'Active',
+                permissions: defaultPerms
+            });
+            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(emps));
+            syncEmployeesToUsers();
+            loadModule('employees');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* إدارة المهام (Tasks Management - Target/Min Logic)                         */
+        /* -------------------------------------------------------------------------- */
+        function renderTasks(container) {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || [];
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+
+            let displayTasks = tasks;
+            if (currentUser.role !== 'Admin' && currentUser.username !== '9256') {
+                let userOp = currentUser.operation || 'WMS';
+                displayTasks = tasks.filter(t => t.operation === userOp);
+                if (displayTasks.length === 0) displayTasks = tasks;
+            }
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'إعداد المهام وفريق العمل (التايم بالدقائق فى الماستر داتا)' : 'Tasks Management (Target / Min in Master Data)'}</h4>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows(STORAGE_KEYS.TASKS, 'task-checkbox', ()=>renderTasks(container))"><i class="fa-solid fa-trash me-1"></i>${t('deleteSelected')}</button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="deleteAllRows(STORAGE_KEYS.TASKS, ()=>renderTasks(container))"><i class="fa-solid fa-ban me-1"></i>${t('clearAll')}</button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadTemplate('Tasks')">Template</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="triggerModuleImport('Tasks')">${t('import')}</button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.TASKS, 'Tasks')">${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        <button class="btn btn-primary btn-sm" onclick="addSampleTask()"><i class="fa-solid fa-plus me-1"></i>${t('addTask')}</button>
+                    </div>
+                </div>
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="30"><input type="checkbox" onchange="toggleSelectAll(this, 'task-checkbox')"></th>
+                                    <th>Task ID</th>
+                                    <th class="text-start">Task Name</th>
+                                    <th>Operation</th>
+                                    <th>Target / Min (التايم بالدقائق)</th>
+                                    <th width="80">${t('action')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${displayTasks.map(t => {
+                                    let targetVal = t.targetPerMin !== undefined ? t.targetPerMin : 2.0;
+                                    return `
+                                <tr>
+                                    <td><input type="checkbox" class="task-checkbox" value="${t.taskId}"></td>
+                                    <td class="fw-bold"><input type="text" class="form-control form-control-sm text-center fw-bold" style="width: 100px;" value="${t.taskId}" onchange="updateTaskField('${t.taskId}', 'taskId', this.value)"></td>
+                                    <td class="text-start"><input type="text" class="form-control form-control-sm" value="${t.name}" onchange="updateTaskField('${t.taskId}', 'name', this.value)"></td>
+                                    <td>
+                                        <select class="form-select form-select-sm" onchange="updateTaskField('${t.taskId}', 'operation', this.value)">
+                                            ${ops.map(o => `<option value="${o.name}" ${t.operation === o.name ? 'selected' : ''}>${o.name}</option>`).join('')}
+                                        </select>
+                                    </td>
+                                    <td><input type="number" step="any" class="form-control form-control-sm text-center fw-bold text-success" style="width: 120px;" value="${targetVal}" onchange="updateTaskField('${t.taskId}', 'targetPerMin', this.value)"></td>
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSingleRow(STORAGE_KEYS.TASKS, '${t.taskId}', ()=>renderTasks(container))"><i class="fa-solid fa-trash"></i></button>
+                                    </td>
+                                </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function updateTaskField(taskId, field, value) {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || [];
+            let t = tasks.find(x => x.taskId === taskId);
+            if(t) {
+                t[field] = (field === 'targetPerMin') ? parseFloat(value) || 0 : value;
+                localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+                
+                let daily = JSON.parse(localStorage.getItem(STORAGE_KEYS.DAILY_INPUT)) || [];
+                daily.forEach(d => {
+                    if(d.task === t.name) d.targetPerMin = t.targetPerMin;
+                });
+                localStorage.setItem(STORAGE_KEYS.DAILY_INPUT, JSON.stringify(daily));
+            }
+        }
+
+        function addSampleTask() {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || [];
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            let id = 'TSK-' + (tasks.length + 1).toString().padStart(3, '0');
+            let defaultOp = (currentUser.operation && currentUser.operation !== 'All') ? currentUser.operation : (ops[0] ? ops[0].name : 'WMS');
+            
+            tasks.push({ taskId: id, name: 'New Task ' + (tasks.length + 1), operation: defaultOp, targetPerMin: 2.0 });
+            localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+            loadModule('tasks');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* إدارة العمليات (Operations)                                                 */
+        /* -------------------------------------------------------------------------- */
+        function renderOperations(container) {
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'إدارة العمليات' : 'Operations Management'}</h4>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows(STORAGE_KEYS.OPERATIONS, 'op-checkbox', ()=>renderOperations(container))"><i class="fa-solid fa-trash me-1"></i>${t('deleteSelected')}</button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="deleteAllRows(STORAGE_KEYS.OPERATIONS, ()=>renderOperations(container))"><i class="fa-solid fa-ban me-1"></i>${t('clearAll')}</button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadTemplate('Operations')">Template</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="triggerModuleImport('Operations')">${t('import')}</button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.OPERATIONS, 'Operations')">${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        <button class="btn btn-primary btn-sm" onclick="addSampleOperation()"><i class="fa-solid fa-plus me-1"></i>${t('addOperation')}</button>
+                    </div>
+                </div>
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="30"><input type="checkbox" onchange="toggleSelectAll(this, 'op-checkbox')"></th>
+                                    <th>ID</th>
+                                    <th class="text-start">Operation Name</th>
+                                    <th width="80">${t('action')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ops.map(o => `
+                                <tr>
+                                    <td><input type="checkbox" class="op-checkbox" value="${o.id}"></td>
+                                    <td><input type="text" class="form-control form-control-sm text-center fw-bold" style="width: 120px;" value="${o.id}" onchange="updateOperationField('${o.id}', 'id', this.value)"></td>
+                                    <td class="text-start"><input type="text" class="form-control form-control-sm" value="${o.name}" onchange="updateOperationField('${o.id}', 'name', this.value)"></td>
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSingleRow(STORAGE_KEYS.OPERATIONS, '${o.id}', ()=>renderOperations(container))"><i class="fa-solid fa-trash"></i></button>
+                                    </td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function updateOperationField(id, field, value) {
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            let op = ops.find(x => x.id === id);
+            if (op) {
+                op[field] = value;
+                localStorage.setItem(STORAGE_KEYS.OPERATIONS, JSON.stringify(ops));
+            }
+        }
+
+        function addSampleOperation() {
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            let newId = 'OP-' + (ops.length + 1).toString().padStart(2, '0');
+            ops.push({ id: newId, name: 'New Operation ' + (ops.length + 1) });
+            localStorage.setItem(STORAGE_KEYS.OPERATIONS, JSON.stringify(ops));
+            loadModule('operations');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* إدارة المخازن والمواقع (Warehouses & Sites)                                  */
+        /* -------------------------------------------------------------------------- */
+        function renderWarehouses(container) {
+            let sites = JSON.parse(localStorage.getItem(STORAGE_KEYS.SITES)) || [];
+            let isAdmin = currentUser.role === 'Admin' || currentUser.username === '9256';
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'إدارة المخازن والمواقع' : 'Warehouses & Sites Management'}</h4>
+                        <small class="text-muted">${currentLang === 'ar' ? 'إضافة، تعديل، أو حذف المخازن والمواقع (Warehouses & Zones)' : 'Add, edit, or delete warehouses and sites'}</small>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.SITES, 'Warehouses')"><i class="fa-solid fa-file-excel me-1"></i>${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        ${isAdmin ? `
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows(STORAGE_KEYS.SITES, 'site-checkbox', ()=>renderWarehouses(container))"><i class="fa-solid fa-trash me-1"></i>${t('deleteSelected')}</button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="deleteAllRows(STORAGE_KEYS.SITES, ()=>renderWarehouses(container))"><i class="fa-solid fa-ban me-1"></i>${t('clearAll')}</button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadTemplate('Warehouses')">Template</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="triggerModuleImport('Warehouses')">${t('import')}</button>
+                        <button class="btn btn-primary btn-sm" onclick="addSampleWarehouse()"><i class="fa-solid fa-plus me-1"></i>${t('addWarehouse')}</button>` : ''}
+                    </div>
+                </div>
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    ${isAdmin ? `<th width="30"><input type="checkbox" onchange="toggleSelectAll(this, 'site-checkbox')"></th>` : ''}
+                                    <th>Warehouse ID</th>
+                                    <th class="text-start">Warehouse / Site Name</th>
+                                    <th class="text-start">Area / Zone</th>
+                                    ${isAdmin ? `<th width="80">${t('action')}</th>` : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sites.map(s => `
+                                <tr>
+                                    ${isAdmin ? `<td><input type="checkbox" class="site-checkbox" value="${s.id}"></td>` : ''}
+                                    <td>${isAdmin ? `<input type="text" class="form-control form-control-sm text-center fw-bold" style="width: 120px;" value="${s.id}" onchange="updateWarehouseField('${s.id}', 'id', this.value)">` : s.id}</td>
+                                    <td class="text-start">${isAdmin ? `<input type="text" class="form-control form-control-sm fw-bold text-primary" value="${s.name}" onchange="updateWarehouseField('${s.id}', 'name', this.value)">` : s.name}</td>
+                                    <td class="text-start">${isAdmin ? `<input type="text" class="form-control form-control-sm" value="${s.area || 'General'}" onchange="updateWarehouseField('${s.id}', 'area', this.value)">` : `<span class="badge bg-info text-dark">${s.area || 'General'}</span>`}</td>
+                                    ${isAdmin ? `
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSingleRow(STORAGE_KEYS.SITES, '${s.id}', ()=>renderWarehouses(container))"><i class="fa-solid fa-trash"></i></button>
+                                    </td>` : ''}
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function updateWarehouseField(id, field, value) {
+            let sites = JSON.parse(localStorage.getItem(STORAGE_KEYS.SITES)) || [];
+            let s = sites.find(x => x.id === id);
+            if (s) {
+                s[field] = value;
+                localStorage.setItem(STORAGE_KEYS.SITES, JSON.stringify(sites));
+            }
+        }
+
+        function addSampleWarehouse() {
+            let sites = JSON.parse(localStorage.getItem(STORAGE_KEYS.SITES)) || [];
+            let newId = 'SITE-' + (sites.length + 1).toString().padStart(2, '0');
+            sites.push({ id: newId, name: 'Warehouse ' + (sites.length + 1), area: 'Zone General' });
+            localStorage.setItem(STORAGE_KEYS.SITES, JSON.stringify(sites));
+            loadModule('warehouses');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* إدارة الشيفتات                                                             */
+        /* -------------------------------------------------------------------------- */
+        function renderShifts(container) {
+            let shifts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SHIFTS)) || [];
+            let isAdmin = currentUser.role === 'Admin' || currentUser.username === '9256';
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'إدارة الشيفتات' : 'Shifts Management'}</h4>
+                        <small class="text-muted">${currentLang === 'ar' ? 'يمكن للأدمن إنشاء وتعديل الشيفتات المتاحة للنظام' : 'Admin can create and manage shifts'}</small>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.SHIFTS, 'Shifts')"><i class="fa-solid fa-file-excel me-1"></i>${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        ${isAdmin ? `
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows(STORAGE_KEYS.SHIFTS, 'shift-checkbox', ()=>renderShifts(container))"><i class="fa-solid fa-trash me-1"></i>${t('deleteSelected')}</button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="deleteAllRows(STORAGE_KEYS.SHIFTS, ()=>renderShifts(container))"><i class="fa-solid fa-ban me-1"></i>${t('clearAll')}</button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadTemplate('Shifts')">Template</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="triggerModuleImport('Shifts')">${t('import')}</button>
+                        <button class="btn btn-primary btn-sm" onclick="addSampleShift()"><i class="fa-solid fa-plus me-1"></i>${t('addShift')}</button>` : ''}
+                    </div>
+                </div>
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    ${isAdmin ? `<th width="30"><input type="checkbox" onchange="toggleSelectAll(this, 'shift-checkbox')"></th>` : ''}
+                                    <th>Shift ID</th>
+                                    <th class="text-start">Shift Name</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    ${isAdmin ? `<th width="80">${t('action')}</th>` : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${shifts.map(sh => `
+                                <tr>
+                                    ${isAdmin ? `<td><input type="checkbox" class="shift-checkbox" value="${sh.id}"></td>` : ''}
+                                    <td>${isAdmin ? `<input type="text" class="form-control form-control-sm text-center fw-bold" style="width: 100px;" value="${sh.id}" onchange="updateShiftField('${sh.id}', 'id', this.value)">` : sh.id}</td>
+                                    <td class="text-start">${isAdmin ? `<input type="text" class="form-control form-control-sm" value="${sh.name}" onchange="updateShiftField('${sh.id}', 'name', this.value)">` : sh.name}</td>
+                                    <td>${isAdmin ? `<input type="time" class="form-control form-control-sm text-center" style="width: 120px;" value="${sh.startTime || '08:00'}" onchange="updateShiftField('${sh.id}', 'startTime', this.value)">` : sh.startTime}</td>
+                                    <td>${isAdmin ? `<input type="time" class="form-control form-control-sm text-center" style="width: 120px;" value="${sh.endTime || '16:00'}" onchange="updateShiftField('${sh.id}', 'endTime', this.value)">` : sh.endTime}</td>
+                                    ${isAdmin ? `
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSingleRow(STORAGE_KEYS.SHIFTS, '${sh.id}', ()=>renderShifts(container))"><i class="fa-solid fa-trash"></i></button>
+                                    </td>` : ''}
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        function updateShiftField(id, field, value) {
+            let shifts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SHIFTS)) || [];
+            let sh = shifts.find(x => x.id === id);
+            if (sh) {
+                sh[field] = value;
+                localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(shifts));
+            }
+        }
+
+        function addSampleShift() {
+            let shifts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SHIFTS)) || [];
+            let newId = 'SH-' + (shifts.length + 1).toString().padStart(2, '0');
+            shifts.push({ id: newId, name: 'New Shift ' + (shifts.length + 1), startTime: '08:00', endTime: '16:00', active: true });
+            localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(shifts));
+            loadModule('shifts');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* الإدخال اليومي وحفظ السبميشن                                                 */
+        /* -------------------------------------------------------------------------- */
+        function renderDailyInput(container) {
+            let daily = JSON.parse(localStorage.getItem(STORAGE_KEYS.DAILY_INPUT)) || [];
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || [];
+            let emps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            let sites = JSON.parse(localStorage.getItem(STORAGE_KEYS.SITES)) || [];
+            let ops = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPERATIONS)) || [];
+            let shifts = JSON.parse(localStorage.getItem(STORAGE_KEYS.SHIFTS)) || [];
+
+            let isAdmin = currentUser.role === 'Admin' || currentUser.username === '9256';
+            let canInputForTeam = isAdmin || (currentUser.permissions && currentUser.permissions.inputScope);
+
+            if (!globalSelectedDailyShift || !shifts.some(s => s.name === globalSelectedDailyShift)) {
+                globalSelectedDailyShift = shifts[0] ? shifts[0].name : 'Morning Shift';
+            }
+
+            let filteredEmps = emps;
+            if (!isAdmin) {
+                let userOp = currentUser.operation || '';
+                filteredEmps = emps.filter(e => e.operation === userOp);
+            } else if (globalSelectedTeamFilter !== 'ALL') {
+                filteredEmps = emps.filter(e => e.operation === globalSelectedTeamFilter);
+            }
+
+            if (!filteredEmps.some(e => e.name === globalSelectedDailyEmployee)) {
+                globalSelectedDailyEmployee = filteredEmps[0] ? filteredEmps[0].name : '';
+            }
+
+            let targetEmpObj = filteredEmps.find(e => e.name === globalSelectedDailyEmployee);
+            let empOperation = targetEmpObj ? targetEmpObj.operation : (globalSelectedTeamFilter !== 'ALL' ? globalSelectedTeamFilter : (ops[0] ? ops[0].name : ''));
+
+            const normalizeTeam = value => String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+            const getTaskTeam = task => task.operation ?? task.team ?? task.operationName ?? '';
+
+            const sameTeam = (a, b) => {
+                const x = normalizeTeam(a);
+                const y = normalizeTeam(b);
+                if (!x || !y) return false;
+                if (x === y) return true;
+                return x.includes(y) || y.includes(x);
+            };
+
+            const selectedTeam = globalSelectedTeamFilter !== 'ALL'
+                ? globalSelectedTeamFilter
+                : (targetEmpObj ? targetEmpObj.operation : (currentUser ? currentUser.operation : ''));
+
+            let filteredTasks = [];
+            if (selectedTeam) {
+                filteredTasks = tasks.filter(task => sameTeam(getTaskTeam(task), selectedTeam));
+            } else if (isAdmin) {
+                filteredTasks = tasks;
+            }
+
+            if (globalSelectedDailyEmployee && targetEmpObj) {
+                const employeeTeam = targetEmpObj.operation || currentUser?.operation || '';
+                if (employeeTeam) {
+                    filteredTasks = tasks.filter(task => sameTeam(getTaskTeam(task), employeeTeam));
+                }
+            }
+
+            if (isAdmin && globalSelectedTeamFilter !== 'ALL') {
+                filteredTasks = tasks.filter(task => sameTeam(getTaskTeam(task), globalSelectedTeamFilter));
+            }
+
+            let displayList = filteredTasks.map((tsk, index) => {
+                let existing = daily.find(d => d.employee === globalSelectedDailyEmployee && d.task === tsk.name && d.date === globalSelectedDailyDate && d.shift === globalSelectedDailyShift);
+                let targetPerMinVal = tsk.targetPerMin !== undefined ? tsk.targetPerMin : 2.0;
+                if (existing) {
+                    return existing;
+                } else {
+                    return {
+                        id: daily.length + index + 1,
+                        date: globalSelectedDailyDate,
+                        employee: globalSelectedDailyEmployee,
+                        operation: getTaskTeam(tsk) || empOperation,
+                        site: sites[0] ? sites[0].name : 'Warehouse 1',
+                        shift: globalSelectedDailyShift,
+                        task: tsk.name,
+                        targetPerMin: targetPerMinVal,
+                        quantity: 0,
+                        consumedMinutes: 420,
+                        productivityPct: 0,
+                        notes: ''
+                    };
+                }
+            });
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'الإدخال اليومي (قاعدة البيانات المركزية - ((الكمية × التايم) ÷ دقائق الشفت) × 100)' : 'Daily Input - Central Hub'}</h4>
+                        <small class="text-muted">${currentLang === 'ar' ? 'اختر التيم، الموظف، الشيفت، والتاريخ بالأعلى' : 'Select team, employee, shift and date above'}</small>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-primary btn-sm" onclick="downloadTemplate('DailyInput')"><i class="fa-solid fa-file-arrow-down me-1"></i>Template</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="triggerModuleImport('DailyInput')"><i class="fa-solid fa-file-import me-1"></i>${t('import')}</button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.DAILY_INPUT, 'Daily_Input_Grid')"><i class="fa-solid fa-file-export me-1"></i>${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        <button class="btn btn-success btn-sm fw-bold px-4" onclick="saveAllDailyInputs()"><i class="fa-solid fa-floppy-disk me-1"></i>${t('save')}</button>
+                    </div>
+                </div>
+
+                <div class="card p-3 shadow-sm mb-3 bg-light border-0">
+                    <div class="row g-3 align-items-center">
+                        ${isAdmin ? `
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-secondary"><i class="fa-solid fa-layer-group me-1"></i>${currentLang === 'ar' ? 'التيم (Team Filter)' : 'Team Filter'}</label>
+                            <select id="top-select-team" class="form-select fw-bold shadow-sm" onchange="onTopTeamChange(this.value)">
+                                <option value="ALL" ${globalSelectedTeamFilter === 'ALL' ? 'selected' : ''}>${currentLang === 'ar' ? 'كل التيمات (All Teams)' : 'All Teams'}</option>
+                                ${ops.map(o => `<option value="${o.name}" ${globalSelectedTeamFilter === o.name ? 'selected' : ''}>${o.name}</option>`).join('')}
+                            </select>
+                        </div>` : ''}
+
+                        <div class="${isAdmin ? 'col-md-3' : 'col-md-4'}">
+                            <label class="form-label fw-bold small text-secondary"><i class="fa-solid fa-user-gear me-1"></i>${currentLang === 'ar' ? 'الموظف (Employee)' : 'Target Employee'}</label>
+                            ${canInputForTeam ? `
+                                <select id="top-select-employee" class="form-select fw-bold text-primary shadow-sm" onchange="onTopEmployeeChange(this.value)">
+                                    ${filteredEmps.length === 0 ? `<option value="">لا يوجد موظفون في هذا التيم</option>` : 
+                                    filteredEmps.map(e => `<option value="${e.name}" ${globalSelectedDailyEmployee === e.name ? 'selected' : ''}>${e.name} (${e.operation || 'General'})</option>`).join('')}
+                                </select>
+                            ` : `
+                                <input type="text" class="form-control fw-bold bg-white text-primary" value="${currentUser.name}" readonly>
+                            `}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-secondary"><i class="fa-solid fa-clock me-1"></i>${currentLang === 'ar' ? 'الشيفت (Shift)' : 'Shift'}</label>
+                            <select id="top-select-shift" class="form-select fw-bold text-dark border-primary shadow-sm" onchange="onTopShiftChange(this.value)">
+                                ${shifts.map(sh => `<option value="${sh.name}" ${globalSelectedDailyShift === sh.name ? 'selected' : ''}>${sh.name} (${sh.startTime} -${sh.endTime})</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-secondary"><i class="fa-solid fa-calendar-days me-1"></i>${currentLang === 'ar' ? 'التاريخ (Date)' : 'Entry Date'}</label>
+                            <input type="date" id="top-select-date" class="form-control fw-bold text-center shadow-sm" value="${globalSelectedDailyDate}" onchange="onTopDateChange(this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-3 shadow-sm mb-3 border-0" style="background: linear-gradient(135deg, rgba(37,99,235,.06), rgba(16,185,129,.06));">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-envelope text-primary fs-4"></i>
+                                <div>
+                                    <div class="fw-bold">${currentLang === 'ar' ? 'إرسال الإنتاجية للمدير عبر البريد الإلكتروني' : 'Email Productivity Submission to Manager'}</div>
+                                    <small class="text-muted">${currentLang === 'ar' ? 'اختياري: عند التفعيل سيتم تجهيز رسالة Outlook/Email تلقائياً بعد السبميشن.' : 'Optional: when enabled, an Outlook/Email message will be prepared automatically after submission.'}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-switch d-flex justify-content-md-end align-items-center gap-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="send-submission-email" ${globalSendSubmissionEmail ? 'checked' : ''} onchange="globalSendSubmissionEmail=this.checked">
+                                <label class="form-check-label fw-bold" for="send-submission-email">${currentLang === 'ar' ? 'إرسال Email' : 'Send Email'}</label>
+                            </div>
+                            <div class="small text-muted text-md-end mt-1">${currentLang === 'ar' ? 'المدير: ' : 'Manager: '}${escapeHtml((JSON.parse(localStorage.getItem(STORAGE_KEYS.SETUP)) || {}).managerEmail || (currentLang === 'ar' ? 'غير محدد' : 'Not configured'))}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40">م</th>
+                                    <th class="text-start">Task Name ${empOperation ? '(مهام التيم: ' + empOperation + ')' : ''}</th>
+                                    <th>Operation</th>
+                                    <th>Site / WH</th>
+                                    <th>Target / Min (التايم المعياري)</th>
+                                    <th width="110">Quantity (الكمية)</th>
+                                    <th width="110">Shift Mins (دقائق الشفت)</th>
+                                    <th width="100">Productivity %</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${displayList.length === 0 ? `
+                                <tr>
+                                    <td colspan="9" class="text-muted py-4">${currentLang === 'ar' ? 'لا توجد مهام معرفة لهذا التيم أو الموظف حالياً' : 'No tasks found for this selection.'}</td>
+                                </tr>` : 
+                                displayList.map((row, idx) => `
+                                <tr>
+                                    <td class="fw-bold">${idx + 1}</td>
+                                    <td class="text-start fw-semibold">${row.task}</td>
+                                    <td>
+                                        <select class="form-select form-select-sm" onchange="updateDailyRowField(${idx}, 'operation', this.value)">
+                                            ${ops.map(o => `<option value="${o.name}" ${row.operation === o.name ? 'selected' : ''}>${o.name}</option>`).join('')}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" onchange="updateDailyRowField(${idx}, 'site', this.value)">
+                                            ${sites.map(s => `<option value="${s.name}" ${row.site === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+                                        </select>
+                                    </td>
+                                    <td class="fw-bold text-secondary"><input type="number" step="any" class="form-control form-control-sm text-center" value="${row.targetPerMin}" onchange="updateDailyRowField(${idx}, 'targetPerMin', this.value)"></td>
+                                    <td><input type="number" step="any" class="form-control form-control-sm text-center fw-bold text-success" id="qty_${idx}" value="${row.quantity}" oninput="calculateRowProd(${idx})"></td>
+                                    <td><input type="number" step="any" class="form-control form-control-sm text-center" id="mins_${idx}" value="${row.consumedMinutes}" oninput="calculateRowProd(${idx})"></td>
+                                    <td><span class="badge bg-success fs-6" id="prod_badge_${idx}">${row.productivityPct}%</span></td>
+                                    <td><input type="text" class="form-control form-control-sm" id="note_${idx}" value="${row.notes || ''}"></td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            window.currentDailyDisplayList = displayList;
+        }
+
+        function onTopTeamChange(val) {
+            globalSelectedTeamFilter = val;
+            let emps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES)) || [];
+            let filtered = (val === 'ALL') ? emps : emps.filter(e => e.operation === val);
+            globalSelectedDailyEmployee = filtered[0] ? filtered[0].name : '';
+            loadModule('dailyInput');
+        }
+
+        function onTopEmployeeChange(val) {
+            globalSelectedDailyEmployee = val;
+            loadModule('dailyInput');
+        }
+
+        function onTopShiftChange(val) {
+            globalSelectedDailyShift = val;
+        }
+
+        function onTopDateChange(val) {
+            globalSelectedDailyDate = val;
+        }
+
+        function updateDailyRowField(idx, field, val) {
+            if(window.currentDailyDisplayList && window.currentDailyDisplayList[idx]) {
+                window.currentDailyDisplayList[idx][field] = (field === 'targetPerMin') ? parseFloat(val) || 0 : val;
+                calculateRowProd(idx);
+            }
+        }
+
+        function calculateRowProd(idx) {
+            let qty = parseFloat(document.getElementById(`qty_${idx}`).value) || 0;
+            let mins = parseFloat(document.getElementById(`mins_${idx}`).value) || 420;
+            let row = window.currentDailyDisplayList[idx];
+            if(row) {
+                row.quantity = qty;
+                row.consumedMinutes = mins;
+                let targetMin = parseFloat(row.targetPerMin) || 0;
+                
+                let prod = mins > 0 ? parseFloat((((qty * targetMin) / mins) * 100).toFixed(2)) : 0;
+                
+                row.productivityPct = prod;
+                document.getElementById(`prod_badge_${idx}`).innerText = prod + '%';
+            }
+        }
+
+        function saveAllDailyInputs() {
+            let daily = JSON.parse(localStorage.getItem(STORAGE_KEYS.DAILY_INPUT)) || [];
+            let subLogs = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBMISSION_LOG)) || [];
+            let timeStr = new Date().toLocaleString();
+            let savedCount = 0;
+            let savedRowsForEmail = [];
+
+            if (window.currentDailyDisplayList) {
+                window.currentDailyDisplayList.forEach((row, idx) => {
+                    let qtyInput = document.getElementById(`qty_${idx}`);
+                    let minsInput = document.getElementById(`mins_${idx}`);
+                    let noteInput = document.getElementById(`note_${idx}`);
+                    
+                    if(qtyInput) row.quantity = parseFloat(qtyInput.value) || 0;
+                    if(minsInput) row.consumedMinutes = parseFloat(minsInput.value) || 420;
+                    if(noteInput) row.notes = noteInput.value;
+
+                    if (row.quantity > 0) {
+                        let targetMin = parseFloat(row.targetPerMin) || 0;
+                        let mins = row.consumedMinutes > 0 ? row.consumedMinutes : 420;
+                        
+                        row.productivityPct = mins > 0 ? parseFloat((((row.quantity * targetMin) / mins) * 100).toFixed(2)) : 0;
+                        
+                        row.date = globalSelectedDailyDate;
+                        row.shift = globalSelectedDailyShift;
+                        row.employee = globalSelectedDailyEmployee || currentUser.name;
+
+                        let existingIdx = daily.findIndex(d => d.employee === row.employee && d.task === row.task && d.date === row.date && d.shift === row.shift);
+                        if(existingIdx >= 0) {
+                            daily[existingIdx] = { ...row };
+                        } else {
+                            daily.push({ ...row });
+                        }
+
+                        let logEntry = {
+                            submitTimestamp: timeStr,
+                            date: row.date,
+                            shift: row.shift,
+                            employee: row.employee,
+                            operation: row.operation,
+                            site: row.site,
+                            task: row.task,
+                            targetPerMin: row.targetPerMin,
+                            quantity: row.quantity,
+                            consumedMinutes: row.consumedMinutes,
+                            productivityPct: row.productivityPct,
+                            notes: row.notes,
+                            emailRequested: !!globalSendSubmissionEmail,
+                            emailTo: '',
+                            emailStatus: globalSendSubmissionEmail ? 'Pending' : 'Not Requested'
+                        };
+
+                        subLogs.unshift(logEntry);
+                        savedRowsForEmail.push({ ...row });
+                        savedCount++;
+                    }
+                });
+
+                if (savedCount === 0) {
+                    alert(currentLang === 'ar' ? 'الرجاء إدخال كمية لأجل تاسك واحد على الأقل قبل الحفظ!' : 'Please enter a quantity for at least one task before saving!');
+                    return;
+                }
+
+                window.currentDailyDisplayList.forEach(row => {
+                    row.quantity = 0;
+                    row.productivityPct = 0;
+                    row.notes = '';
+                });
+
+                window.currentDailyDisplayList.forEach(row => {
+                    let matchIdx = daily.findIndex(d => d.employee === row.employee && d.task === row.task && d.date === row.date && d.shift === row.shift);
+                    if (matchIdx >= 0) {
+                        daily[matchIdx].quantity = 0;
+                        daily[matchIdx].productivityPct = 0;
+                        daily[matchIdx].notes = '';
+                    }
+                });
+
+                localStorage.setItem(STORAGE_KEYS.DAILY_INPUT, JSON.stringify(daily));
+                localStorage.setItem(STORAGE_KEYS.SUBMISSION_LOG, JSON.stringify(subLogs));
+
+                let emailMessage = '';
+                if (globalSendSubmissionEmail) {
+                    let setup = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETUP)) || {};
+                    let managerEmail = (setup.managerEmail || '').toString().trim();
+
+                    if (!managerEmail) {
+                        alert(currentLang === 'ar'
+                            ? 'تم حفظ السبميشن بنجاح، لكن لم يتم تجهيز الإيميل لأن بريد المدير غير مُحدد. ادخل على System Setup وأضف Manager Email.'
+                            : 'Submission saved successfully, but the email was not prepared because Manager Email is not configured. Open System Setup and add Manager Email.');
+                    } else {
+                        subLogs.forEach(log => {
+                            if (log.emailRequested && !log.emailTo && savedRowsForEmail.some(r => r.task === log.task && r.date === log.date && r.shift === log.shift && r.employee === log.employee && r.quantity === log.quantity && r.submitTimestamp === log.submitTimestamp)) {
+                                log.emailTo = managerEmail;
+                                log.emailStatus = 'Prepared';
+                            }
+                        });
+                        localStorage.setItem(STORAGE_KEYS.SUBMISSION_LOG, JSON.stringify(subLogs));
+                        emailMessage = prepareProductivityEmail(savedRowsForEmail, managerEmail);
+                    }
+                }
+
+                logAudit('Save Daily Input', 'DailyInput', `Saved daily submission for employee ${globalSelectedDailyEmployee} in shift ${globalSelectedDailyShift} (${savedCount} active tasks). Email requested: ${globalSendSubmissionEmail ? 'Yes' : 'No'}.`);
+                
+                if (emailMessage) {
+                    setTimeout(() => {
+                        try {
+                            window.location.href = emailMessage;
+                        } catch (e) {
+                            alert(currentLang === 'ar' ? 'تم حفظ السبميشن، ولكن تعذر فتح برنامج البريد.' : 'Submission was saved, but the email client could not be opened.');
+                        }
+                    }, 150);
+                }
+
+                alert(currentLang === 'ar'
+                    ? `تم حفظ وترحيل عدد (${savedCount}) تاسك بنجاح${emailMessage ? ' وتم تجهيز رسالة الإيميل.' : ''}`
+                    : `Successfully saved ${savedCount} tasks${emailMessage ? ' and prepared the email message.' : ''}`);
+                
+                loadModule('dailyInput');
+            }
+        }
+
+        function prepareProductivityEmail(rows, managerEmail) {
+            if (!rows || rows.length === 0 || !managerEmail) return '';
+
+            let setup = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETUP)) || {};
+            let companyName = setup.companyName || 'OPMS Enterprise';
+            let first = rows[0];
+            let totalQty = rows.reduce((sum, r) => sum + (parseFloat(r.quantity) || 0), 0);
+            let totalMins = rows.reduce((sum, r) => sum + (parseFloat(r.consumedMinutes) || 0), 0);
+            let avgProd = rows.length ? (rows.reduce((sum, r) => sum + (parseFloat(r.productivityPct) || 0), 0) / rows.length) : 0;
+
+            let subject = `${companyName} - Productivity Submission - ${first.employee} - ${first.date} - ${first.shift}`;
+            let lines = [];
+            if (currentLang === 'ar') {
+                lines.push(`Dear Manager,`);
+                lines.push('');
+                lines.push('تم تسجيل وإرسال بيانات الإنتاجية التالية من نظام OPMS Enterprise:');
+                lines.push(`الموظف: ${first.employee}`);
+                lines.push(`التاريخ: ${first.date}`);
+                lines.push(`الشيفت: ${first.shift}`);
+                lines.push(`العملية: ${first.operation || '-'}`);
+                lines.push(`إجمالي الكمية: ${totalQty}`);
+                lines.push(`إجمالي الدقائق: ${totalMins}`);
+                lines.push(`متوسط الإنتاجية: ${avgProd.toFixed(2)}%`);
+                lines.push('');
+                lines.push('تفاصيل المهام:');
+                lines.push('Task | Operation | Site | Target/Min | Quantity | Minutes | Productivity % | Notes');
+            } else {
+                lines.push('Dear Manager,');
+                lines.push('');
+                lines.push('The following productivity submission has been recorded in OPMS Enterprise:');
+                lines.push(`Employee: ${first.employee}`);
+                lines.push(`Date: ${first.date}`);
+                lines.push(`Shift: ${first.shift}`);
+                lines.push(`Operation: ${first.operation || '-'}`);
+                lines.push(`Total Quantity: ${totalQty}`);
+                lines.push(`Total Minutes: ${totalMins}`);
+                lines.push(`Average Productivity: ${avgProd.toFixed(2)}%`);
+                lines.push('');
+                lines.push('Task Details:');
+                lines.push('Task | Operation | Site | Target/Min | Quantity | Minutes | Productivity % | Notes');
+            }
+
+            rows.forEach(r => {
+                lines.push(`${r.task} | ${r.operation || '-'} | ${r.site || '-'} | ${r.targetPerMin || 0} | ${r.quantity || 0} | ${r.consumedMinutes || 0} | ${r.productivityPct || 0}% | ${r.notes || '-'}`);
+            });
+
+            lines.push('');
+            lines.push(currentLang === 'ar' ? 'Regards,' : 'Regards,');
+            lines.push(currentUser ? currentUser.name : 'OPMS User');
+
+            return `mailto:${managerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\r\n'))}`;
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* التقارير (Reports)                                                         */
+        /* -------------------------------------------------------------------------- */
+        function renderReports(container) {
+            container.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card p-4 shadow-sm h-100">
+                            <h5 class="fw-bold mb-3"><i class="fa-solid fa-file-excel text-success me-2"></i>${currentLang === 'ar' ? 'تصدير سجل السبميشن المجمع' : 'Export Submission Log'}</h5>
+                            <p class="text-muted small">${currentLang === 'ar' ? 'تصدير كافة تقارير السبميشن المسجلة بصيغة Excel لسهولة المراجعة والتحليل.' : 'Export all submission records to Excel.'}</p>
+                            <button class="btn btn-success mt-auto fw-bold" onclick="exportModuleData(STORAGE_KEYS.SUBMISSION_LOG, 'Submission_Log_Report')"><i class="fa-solid fa-download me-2"></i>${currentLang === 'ar' ? 'تحميل التقرير (Excel)' : 'Download Report'}</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-4 shadow-sm h-100">
+                            <h5 class="fw-bold mb-3"><i class="fa-solid fa-file-zipper text-primary me-2"></i>${currentLang === 'ar' ? 'التصدير الشامل لكافة أقسام النظام' : 'Comprehensive System Export'}</h5>
+                            <p class="text-muted small">${currentLang === 'ar' ? 'تصدير قاعدة بيانات النظام كاملة (الموظفون، المهام، العمليات، المخازن، الشيفتات، والسبميشن).' : 'Export all system datasets in one zip/excel file.'}</p>
+                            <button class="btn btn-primary mt-auto fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-download me-2"></i>${currentLang === 'ar' ? 'تصدير شامل (شيتات متعددة)' : 'Export All'}</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* الاستيراد والتصدير الجماعي (Bulk Upload)                                     */
+        /* -------------------------------------------------------------------------- */
+        function renderBulkUpload(container) {
+            const ar = currentLang === 'ar';
+            const modules = [
+                {
+                    type: 'Employees',
+                    icon: 'fa-users',
+                    title: ar ? 'الموظفون والصلاحيات' : 'Employees & Permissions',
+                    desc: ar ? 'تحميل القالب، الاستيراد الجماعي، أو تصدير البيانات الحالية فوراً.' : 'Download template, import in bulk, or export current data instantly.'
+                },
+                {
+                    type: 'Tasks',
+                    icon: 'fa-list-check',
+                    title: ar ? 'المهام والأهداف' : 'Tasks & Targets',
+                    desc: ar ? 'تحميل القالب، الاستيراد الجماعي، أو تصدير البيانات الحالية فوراً.' : 'Download template, import in bulk, or export current data instantly.'
+                },
+                {
+                    type: 'Operations',
+                    icon: 'fa-gears',
+                    title: ar ? 'العمليات' : 'Operations',
+                    desc: ar ? 'تحميل القالب، الاستيراد الجماعي، أو تصدير البيانات الحالية فوراً.' : 'Download template, import in bulk, or export current data instantly.'
+                },
+                {
+                    type: 'Warehouses',
+                    icon: 'fa-warehouse',
+                    title: ar ? 'المخازن والمواقع' : 'Warehouses & Sites',
+                    desc: ar ? 'تحميل القالب، الاستيراد الجماعي، أو تصدير البيانات الحالية فوراً.' : 'Download template, import in bulk, or export current data instantly.'
+                },
+                {
+                    type: 'Shifts',
+                    icon: 'fa-clock',
+                    title: ar ? 'الشيفتات' : 'Shifts',
+                    desc: ar ? 'تحميل القالب، الاستيراد الجماعي، أو تصدير البيانات الحالية فوراً.' : 'Download template, import in bulk, or export current data instantly.'
+                },
+                {
+                    type: 'DailyInput',
+                    icon: 'fa-keyboard',
+                    title: ar ? 'الإدخال اليومي' : 'Daily Input',
+                    desc: ar ? 'تحميل القالب، الاستيراد الجماعي، أو تصدير البيانات الحالية فوراً.' : 'Download template, import in bulk, or export current data instantly.'
+                }
+            ];
+
+            container.innerHTML = `
+                <div class="bulk-upload-page">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-4 flex-wrap">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="fa-solid fa-file-arrow-up text-warning fs-3"></i>
+                                <h3 class="fw-bold m-0">${ar ? 'مركز الاستيراد والتصدير الجماعي' : 'Bulk Import & Export Hub'}</h3>
+                            </div>
+                            <p class="text-muted mb-0">${ar ? 'إدارة الاستيراد الجماعي والتصدير لجميع وحدات النظام من صفحة واحدة' : 'Manage bulk import and export for all system modules via Excel on a single page'}</p>
+                        </div>
+                        <button class="btn btn-success fw-bold px-4 py-2" onclick="exportAllSystemData()">
+                            <i class="fa-solid fa-file-excel me-1"></i>${ar ? 'تصدير الكل (شامل)' : 'Export All (Comprehensive)'}
+                        </button>
+                    </div>
+
+                    <div class="row g-4">
+                        ${modules.map(m => `
+                            <div class="col-xl-4 col-md-6">
+                                <div class="bulk-module-card h-100">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="bulk-module-icon">
+                                            <i class="fa-solid ${m.icon}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="fw-bold mb-3">${m.title}</h5>
+                                            <p class="text-muted small mb-4">${m.desc}</p>
+                                        </div>
+                                    </div>
+                                    <div class="bulk-actions">
+                                        <button class="btn btn-outline-primary" onclick="downloadTemplate('${m.type}')">
+                                            <i class="fa-solid fa-download me-1"></i>${ar ? 'قالب' : 'Template'}
+                                        </button>
+                                        <button class="btn btn-outline-secondary" onclick="triggerModuleImport('${m.type}')">
+                                            <i class="fa-solid fa-upload me-1"></i>${t('import')}
+                                        </button>
+                                    </div>
+                                    <button class="btn btn-success w-100 fw-bold mt-2" onclick="exportModuleData(STORAGE_KEYS.${m.type === 'Warehouses' ? 'SITES' : m.type === 'DailyInput' ? 'DAILY_INPUT' : m.type.toUpperCase()}, '${m.type === 'DailyInput' ? 'Daily_Input_Hub' : m.type}')">
+                                        <i class="fa-solid fa-file-excel me-1"></i>${ar ? 'تصدير' : 'Export'} (${m.title})
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+        }
+
+        function escapeHtml(value) {
+            return (value === undefined || value === null ? '' : value.toString())
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* إعدادات النظام (Setup)                                                     */
+        /* -------------------------------------------------------------------------- */
+        function renderSetup(container) {
+            let setup = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETUP)) || { companyName: 'OPMS Enterprise', managerEmail: '' };
+            container.innerHTML = `
+                <div class="card p-4 shadow-sm" style="max-width: 700px;">
+                    <h4 class="fw-bold mb-3">${currentLang === 'ar' ? 'إعدادات النظام العامة' : 'System Setup'}</h4>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">${currentLang === 'ar' ? 'اسم الشركة / المؤسسة' : 'Company / Organization Name'}</label>
+                        <input type="text" id="setup-company-name" class="form-control" value="${escapeHtml(setup.companyName || 'OPMS Enterprise')}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold"><i class="fa-solid fa-envelope text-primary me-1"></i>${currentLang === 'ar' ? 'بريد المدير لاستقبال الإنتاجية' : 'Manager Email for Productivity Notifications'}</label>
+                        <input type="email" id="setup-manager-email" class="form-control" placeholder="manager@company.com" value="${escapeHtml(setup.managerEmail || '')}">
+                        <small class="text-muted">${currentLang === 'ar' ? 'سيتم استخدام هذا البريد عند تفعيل Send Email من شاشة Daily Input. الإرسال يفتح برنامج البريد الافتراضي ويحتاج Outlook/Email Client مُعد على الجهاز.' : 'This address is used when Send Email is enabled from Daily Input. The feature opens the default mail client and requires Outlook/an email client configured on the device.'}</small>
+                    </div>
+                    <button class="btn btn-primary fw-bold" onclick="saveSystemSetup()"><i class="fa-solid fa-floppy-disk me-1"></i>${currentLang === 'ar' ? 'حفظ الإعدادات' : 'Save Setup'}</button>
+                </div>`;
+        }
+
+        function saveSystemSetup() {
+            let oldSetup = JSON.parse(localStorage.getItem(STORAGE_KEYS.SETUP)) || {};
+            let name = document.getElementById('setup-company-name').value.trim();
+            let managerEmail = document.getElementById('setup-manager-email').value.trim();
+            let setup = { ...oldSetup, companyName: name || 'OPMS Enterprise', managerEmail: managerEmail };
+            localStorage.setItem(STORAGE_KEYS.SETUP, JSON.stringify(setup));
+            updateSystemBrandingUI();
+            logAudit('Update Setup', 'Setup', `Updated company name to ${setup.companyName} and manager email configuration.`);
+            alert(currentLang === 'ar' ? 'تم حفظ الإعدادات بنجاح!' : 'Setup saved successfully!');
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* سجل التدقيق (Audit Log - محدث بخاصية التحديد والحذف)                       */
+        /* -------------------------------------------------------------------------- */
+        function renderAudit(container) {
+            let audit = JSON.parse(localStorage.getItem(STORAGE_KEYS.AUDIT)) || [];
+            let isAdmin = currentUser.role === 'Admin' || currentUser.username === '9256';
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold m-0">${currentLang === 'ar' ? 'سجل التدقيق (Audit Log)' : 'Audit Log'}</h4>
+                        <small class="text-muted">${currentLang === 'ar' ? 'متابعة كافة العمليات وتغييرات النظام مع إمكانية التحديد والحذف' : 'Track all system operations and changes with selection & delete support'}</small>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-success btn-sm" onclick="exportModuleData(STORAGE_KEYS.AUDIT, 'Audit_Log')"><i class="fa-solid fa-file-excel me-1"></i>${t('export')}</button>
+                        <button class="btn btn-success btn-sm fw-bold" onclick="exportAllSystemData()"><i class="fa-solid fa-file-zipper me-1"></i>${t('exportAll')}</button>
+                        ${isAdmin ? `
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSelectedRows(STORAGE_KEYS.AUDIT, 'audit-checkbox', ()=>renderAudit(container))"><i class="fa-solid fa-trash me-1"></i>${t('deleteSelected')}</button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="deleteAllRows(STORAGE_KEYS.AUDIT, ()=>renderAudit(container))"><i class="fa-solid fa-ban me-1"></i>${t('clearAll')}</button>` : ''}
+                    </div>
+                </div>
+                <div class="card p-3 shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    ${isAdmin ? `<th width="30"><input type="checkbox" onchange="toggleSelectAll(this, 'audit-checkbox')"></th>` : ''}
+                                    <th width="40">#</th>
+                                    <th>${currentLang === 'ar' ? 'الوقت والتاريخ' : 'Timestamp'}</th>
+                                    <th>${currentLang === 'ar' ? 'المستخدم' : 'User'}</th>
+                                    <th>${currentLang === 'ar' ? 'الإجراء' : 'Action'}</th>
+                                    <th>${currentLang === 'ar' ? 'القسم' : 'Module'}</th>
+                                    <th class="text-start">${currentLang === 'ar' ? 'التفاصيل' : 'Details'}</th>
+                                    ${isAdmin ? `<th width="70">${t('action')}</th>` : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${audit.length === 0 ? `<tr><td colspan="${isAdmin ? 8 : 6}" class="text-muted py-4">${currentLang === 'ar' ? 'لا توجد سجلات تدقيق حتى الآن' : 'No audit logs found.'}</td></tr>` : 
+                                audit.map((item, idx) => `
+                                <tr>
+                                    ${isAdmin ? `<td><input type="checkbox" class="audit-checkbox" value="${idx}"></td>` : ''}
+                                    <td class="fw-bold">${idx + 1}</td>
+                                    <td><small class="text-muted">${item.timestamp}</small></td>
+                                    <td class="fw-bold text-primary">${item.user}</td>
+                                    <td><span class="badge bg-secondary">${item.action}</span></td>
+                                    <td><span class="badge bg-info text-dark">${item.module}</span></td>
+                                    <td class="text-start"><small>${item.details}</small></td>${isAdmin ? `
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteSingleRow(STORAGE_KEYS.AUDIT, ${idx}, ()=>renderAudit(container))"><i class="fa-solid fa-trash"></i></button>
+                                    </td>` : ''}
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        }
+
+        window.onload = function() {
+            initStorage();
+            let savedUser = localStorage.getItem('opms_current_user');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    document.getElementById('login-container').classList.add('d-none');
+                    document.getElementById('app-container').classList.remove('d-none');
+                    document.getElementById('user-avatar-initials').innerText = currentUser.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                    document.getElementById('current-user-name').innerText = currentUser.name;
+                    updateSystemBrandingUI();
+                    renderNavigation();
+                    loadModule('dashboard');
+                } catch(e) {
+                    localStorage.removeItem('opms_current_user');
+                }
+            }
+            applyLanguageSettings();
+        };
+    </script>
+</body>
+</html>
